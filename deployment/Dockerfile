@@ -1,6 +1,6 @@
 FROM golang:1.22.2
 WORKDIR /app
-COPY .. .
+COPY ../ ./
 RUN go mod download
 WORKDIR /cmd
 RUN go build main.go
