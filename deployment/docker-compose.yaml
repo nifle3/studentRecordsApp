@@ -10,6 +10,7 @@ services:
       dockerfile: Dockerfile
     networks:
       - prod
+      - test
     restart: unless-stopped
     ports:
       - '8080:8080'
@@ -30,6 +31,22 @@ services:
     networks:
       - prod
 
+  database_test:
+    container_name: database_test
+    image: postgres:16.2
+    restart: always
+    environment:
+      POSTGRES_USER: 'nifle3'
+      POSTGRES_PASSWORD: '12345'
+      POSTGRES_DB: 'student_records'
+    ports:
+      - '5433:5433'
+    volumes:
+      - postgres_data:/data/postgres
+      - ../sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - test
+
   minio:
     container_name: minio
     image: bitnami/minio:2024.4.18
@@ -47,6 +64,8 @@ services:
 
 networks:
   prod:
+    driver: bridge
+  test:
     driver: bridge
 
 volumes:
