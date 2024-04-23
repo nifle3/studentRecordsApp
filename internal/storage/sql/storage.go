@@ -7,6 +7,10 @@ import (
 )
 
 var _ service.StudentDb = (*Storage)(nil)
+var _ service.StudentsDocumentDb = (*Storage)(nil)
+var _ service.PhoneNumberDb = (*Storage)(nil)
+var _ service.UserDb = (*Storage)(nil)
+var _ service.ApplicationDb = (*Storage)(nil)
 
 type Storage struct {
 	db *sql.DB
