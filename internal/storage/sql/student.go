@@ -2,89 +2,103 @@ package sql
 
 import (
 	"context"
+
 	"github.com/google/uuid"
+
+	"studentRecordsApp/internal/casts"
+	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 )
 
-func (s Storage) AddStudent(student sqlEntities.Student, phone []sqlEntities.PhoneNumber,
-	studentsReport sqlEntities.StudentsReport, ctx context.Context) error {
-
-	student.Id = uuid.New()
-	studentsReport.Id = student.Id
-
-	tx, err := s.db.BeginTx(ctx, nil)
+func (s *Storage) GetStudents(ctx context.Context) ([]entities.Student, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT * FROM Users`)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	defer rows.Close()
 
-	_, err = tx.ExecContext(ctx, `
-        INSERT INTO Students (id, first_name, last_name, surname, passport_seria, passport_number, birth_date, email,
-                              password, country, city, street, house, apartment)
-        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		student.Id, student.FirstName, student.LastName, student.Surname, student.PassportSeria, student.PassportNumber,
-		student.BirthDate, student.Email, student.Password, student.Country, student.City, student.Street,
-		student.HouseNumber, student.ApartmentNumber)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
+	results := make([]entities.Student, 0)
 
-	for _, item := range phone {
-		item.Id = uuid.New()
-		item.StudentId = student.Id
-
-		_, err = tx.ExecContext(ctx, `
-        	INSERT INTO PhoneNumbers (id, student_id, country_code, city_code, code, description)
-        	VALUES(?, ?, ?, ?, ?, ?)`,
-			item.Id, item.StudentId, item.CountryCode, item.CityCode, item.Code, item.Description)
-
+	for rows.Next() {
+		var result sqlEntities.Student
+		err := rows.Scan(&result)
 		if err != nil {
-			_ = tx.Rollback()
-			return err
+			return nil, err
 		}
+
+		results = append(results, casts.StudentSqlToEntitie(result, ctx))
 	}
 
-	_, err = tx.ExecContext(ctx, `
-        INSERT INTO StudentsReports (id, enroll_year, specialization, enroll_order_number)
-        VALUES(?,?,?,?)`,
-		studentsReport.Id, studentsReport.EnrollYear, studentsReport.Specialization, studentsReport.EnrollYear)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-
-	return nil
+	return results, nil
 }
 
-func (s Storage) UpdateStudent(student sqlEntities.Student, ctx context.Context) error {
-	_, err := s.db.ExecContext(ctx, `
-		UPDATE Students SET first_name=?, last_name=?, surname=?, passport_seria=?, passport_number=?,
-		birth_date=?, email=?, password=?, country=?, city=?, street=?, house=?, apartment=? 
-		WHERE id=?`,
-		student.FirstName, student.LastName, student.Surname, student.PassportSeria, student.PassportNumber,
-		student.BirthDate, student.Email, student.Password, student.Country, student.City, student.Street,
-		student.HouseNumber, student.ApartmentNumber, student.Id)
+func (s *Storage) GetStudent(id string, ctx context.Context) (entities.Student, error) {
+	uuId, err := uuid.Parse(id)
+	if err != nil {
+		return entities.Student{}, err
+	}
+
+	var result sqlEntities.Student
+	err = s.db.QueryRowContext(ctx, `SELECT * FROM Students WHERE id = ?`, uuId).Scan(&result)
+	if err != nil {
+		return entities.Student{}, err
+	}
+
+	return casts.StudentSqlToEntitie(result, ctx), nil
+}
+
+func (s *Storage) AddStudent(student entities.Student, ctx context.Context) error {
+	sqlStudent := casts.StudentEntitieToSqlWithoutId(student, ctx)
+	sqlStudent.Id = uuid.New()
+
+	_, err := s.db.ExecContext(ctx,
+		`INSERT INTO Students (id, first_name, last_name, surname, passport_seria, passport_number,
+                    birth_date, email, password, country, city, street, house, apartment, enroll_year, 
+                    specialization, enroll_order_number) 
+                    VALUES(
+                            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+                   )`, sqlStudent.Id, sqlStudent.FirstName, sqlStudent.LastName, sqlStudent.Surname,
+		sqlStudent.PassportSeria, sqlStudent.PassportNumber, sqlStudent.BirthDate, sqlStudent.Email,
+		sqlStudent.Password, sqlStudent.Country, sqlStudent.City, sqlStudent.Street,
+		sqlStudent.HouseNumber, sqlStudent.ApartmentNumber, sqlStudent.EnrollYear, sqlStudent.Specialization,
+		sqlStudent.OrderNumber)
 
 	return err
 }
 
-func (s Storage) GetAllStudents(ctx context.Context) ([]sqlEntities.Student, error) {
-	return nil, nil
+func (s *Storage) UpdateStudent(student entities.Student, ctx context.Context) error {
+	sqlStudent, err := casts.StudentEntitieToSql(student, ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.db.ExecContext(ctx,
+		`UPDATE Students SET first_name =?, last_name =?, surname =?, passport_seria =?, passport_number =?,
+                    birth_date =?, email =?, country =?, city =?, street =?, house =?, apartment =?, 
+                    enroll_year =?, specialization =?, enroll_order_number =?
+                WHERE id =?`, sqlStudent.FirstName, sqlStudent.LastName, sqlStudent.Surname, sqlStudent.PassportSeria,
+		sqlStudent.PassportNumber, sqlStudent.BirthDate, sqlStudent.Email, sqlStudent.Password, sqlStudent.Country,
+		sqlStudent.City, sqlStudent.Street, sqlStudent.HouseNumber, sqlStudent.ApartmentNumber, sqlStudent.EnrollYear,
+		sqlStudent.Specialization, sqlStudent.OrderNumber, sqlStudent.Id)
+
+	return err
 }
 
-func (s Storage) GetStudentById(id uuid.UUID, ctx context.Context) (sqlEntities.Student, error) {
-	row, err := s.db.QueryContext(ctx, `
-		SELECT * FROM Students WHERE id=?`, id)
-
+func (s *Storage) DeleteStudent(id string, ctx context.Context) error {
+	uuId, err := uuid.Parse(id)
 	if err != nil {
-		return sqlEntities.Student{}, err
+		return err
 	}
 
-	var result sqlEntities.Student
-	err = row.Scan(&result)
-	if err != nil {
-		return sqlEntities.Student{}, err
-	}
+	_, err = s.db.ExecContext(ctx, `DELETE FROM Students WHERE id =?`, uuId)
 
-	return result, nil
+	return err
+}
+
+func (s *Storage) GetStudentByEmail(email string, ctx context.Context) (entities.Student, error) {
+	var student sqlEntities.Student
+
+	err := s.db.QueryRowContext(ctx, `SELECT * FROM Students WHERE email =?`, email).Scan(&student)
+
+	return casts.StudentSqlToEntitie(student, ctx), err
 }

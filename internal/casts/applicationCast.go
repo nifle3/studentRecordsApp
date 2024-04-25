@@ -2,7 +2,9 @@ package casts
 
 import (
 	"context"
+
 	"github.com/google/uuid"
+
 	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 )
@@ -20,6 +22,21 @@ func ApplicationServiceToSql(application entities.Application, _ context.Context
 
 	return sqlEntities.Application{
 		Id:        id,
+		StudentId: studentId,
+		Text:      application.Text,
+		Status:    application.Status,
+		CreatedAt: application.CreatedAt,
+	}, nil
+}
+
+func ApplicationServiceToSqlWithOutId(application entities.Application, _ context.Context) (sqlEntities.Application, error) {
+	studentId, err := uuid.Parse(application.StudentId)
+	if err != nil {
+		return sqlEntities.Application{}, err
+	}
+
+	return sqlEntities.Application{
+		Id:        uuid.UUID{},
 		StudentId: studentId,
 		Text:      application.Text,
 		Status:    application.Status,

@@ -1,4 +1,7 @@
 .gitignore
 .idea
 .dockerignore
-deployment
+docker-compose.yaml
+Dockerfile
+sql
+.github

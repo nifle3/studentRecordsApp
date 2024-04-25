@@ -1,16 +1,14 @@
 package app
 
-import (
-	"os"
-	"studentRecordsApp/internal/transport/server"
-)
+import "net/http"
 
 func Start() {
 	// storage
 	// word
 	// service
-	err := server.Start()
-	if err != nil {
-		os.Exit(1)
-	}
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("Hello, World!"))
+	})
+	http.ListenAndServe(":8080", nil)
 }

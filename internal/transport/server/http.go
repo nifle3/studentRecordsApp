@@ -1,14 +1,19 @@
 package server
 
 import (
-	"github.com/google/uuid"
 	"net/http"
+	"studentRecordsApp/internal/service"
 )
 
-func Start() error {
-	http.HandleFunc("/", func(writer http.ResponseWriter, r *http.Request) {
-		_, _ = writer.Write([]byte(uuid.New().String()))
-	})
+type Server struct {
+    application service.Application
+    student     service.Student
+    phoneNumber service.PhoneNumber
+    document    service.Document
+    user        service.User
+}
 
-	return http.ListenAndServe(":8080", nil)
+func (s *Server) Start() error {
+
+    return http.ListenAndServe(":8080", nil)
 }

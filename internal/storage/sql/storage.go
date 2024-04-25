@@ -2,15 +2,19 @@ package sql
 
 import (
 	"database/sql"
+
 	_ "github.com/lib/pq"
+
 	"studentRecordsApp/internal/service"
 )
 
-var _ service.StudentDb = (*Storage)(nil)
-var _ service.StudentsDocumentDb = (*Storage)(nil)
-var _ service.PhoneNumberDb = (*Storage)(nil)
-var _ service.UserDb = (*Storage)(nil)
-var _ service.ApplicationDb = (*Storage)(nil)
+var (
+	_ service.StudentDb     = (*Storage)(nil)
+	_ service.DocumentDb    = (*Storage)(nil)
+	_ service.PhoneNumberDb = (*Storage)(nil)
+	_ service.UserDb        = (*Storage)(nil)
+	_ service.ApplicationDb = (*Storage)(nil)
+)
 
 type Storage struct {
 	db *sql.DB
