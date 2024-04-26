@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"regexp"
 	"strings"
@@ -26,6 +27,8 @@ type Student struct {
 	Specialization  string
 	OrderNumber     string
 	Phones          []PhoneNumber
+	LinkPhoto       string
+	Photo           []byte
 }
 
 func (s *Student) CheckIsNotEmpty() bool {
@@ -45,6 +48,7 @@ func (s *Student) CheckIsNotEmpty() bool {
 		s.EnrollYear != 0 &&
 		s.Specialization != "" &&
 		s.OrderNumber != ""
+
 }
 
 func (s *Student) CheckBirthdate() bool {
@@ -84,4 +88,8 @@ func (s *Student) HashPassword() error {
 
 func (s *Student) CheckHash(password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(s.Password), []byte(password))
+}
+
+func (s *Student) GetFullName() string {
+	return fmt.Sprintf("%s %s %s", s.FirstName, s.Surname, s.LastName)
 }

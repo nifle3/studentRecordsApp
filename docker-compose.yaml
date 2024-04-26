@@ -10,10 +10,21 @@ services:
       dockerfile: Dockerfile
     networks:
       - prod
-      - test
     restart: unless-stopped
     ports:
       - '8080:8080'
+    environment:
+      DB_USER: "nifle3"
+      DB_PASSWORD: "12345"
+      DB_HOST: "localhost"
+      DB_PORT: "5432"
+      DB_NAME: "student_records"
+      DB_SSL: "false"
+      FS_USER: "nifle"
+      FS_PASSWORD: "nilfepassword"
+      FS_END_POINT: "localhost:9000"
+      SERVER_PORT: "8080"
+      SERVER_HOST: "localhost"
 
   postgres:
     container_name: postgres
@@ -31,22 +42,6 @@ services:
     networks:
       - prod
 
-  database_test:
-    container_name: database_test
-    image: postgres:16.2
-    restart: always
-    environment:
-      POSTGRES_USER: 'nifle3'
-      POSTGRES_PASSWORD: '12345'
-      POSTGRES_DB: 'student_records'
-    ports:
-      - '5433:5433'
-    volumes:
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - postgres_data:/data/postgres
-    networks:
-      - test
-
   minio:
     container_name: minio
     image: quay.io/minio/minio:RELEASE.2024-04-18T19-09-19Z
@@ -60,8 +55,8 @@ services:
     networks:
       - prod
     environment:
-      - MINIO_ROOT_USER=nifle
-      - MINIO_ROOT_PASSWORD=nilfepassword
+      MINIO_ROOT_USER: "nifle"
+      MINIO_ROOT_PASSWORD: "nilfepassword"
     command: server --console-address ":9001" /data
     healthcheck:
       test: [ "CMD", "mc", "ready", "local" ]
@@ -71,8 +66,6 @@ services:
 
 networks:
   prod:
-    driver: bridge
-  test:
     driver: bridge
 
 volumes:

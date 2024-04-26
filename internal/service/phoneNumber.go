@@ -18,9 +18,9 @@ type PhoneNumber struct {
 	db *PhoneNumberDb
 }
 
-func NewPhoneNumber(db *PhoneNumberDb) PhoneNumber {
+func NewPhoneNumber(db PhoneNumberDb) PhoneNumber {
 	return PhoneNumber{
-		db: db,
+		db: &db,
 	}
 }
 

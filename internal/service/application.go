@@ -17,13 +17,22 @@ type ApplicationDb interface {
 	DeleteApplication(id, userId string, ctx context.Context) error
 }
 
-type Application struct {
-	db *ApplicationDb
+type ApplicationFS interface {
+	GetApplicationFile(link string, ctx context.Context) ([]byte, error)
+	AddApplicationFile(name string, file []byte, ctx context.Context) (string, error)
+	DeleteApplicationFile(link string, ctx context.Context) error
+	UpdateApplicationFile(file []byte, link string, ctx context.Context) (string, error)
 }
 
-func NewApplication(db *ApplicationDb) Application {
+type Application struct {
+	db *ApplicationDb
+	fs *ApplicationFS
+}
+
+func NewApplication(db ApplicationDb, fs ApplicationFS) Application {
 	return Application{
-		db: db,
+		db: &db,
+		fs: &fs,
 	}
 }
 
@@ -36,7 +45,17 @@ func (a *Application) GetAllForUser(userId string, ctx context.Context) ([]entit
 }
 
 func (a *Application) GetById(id string, ctx context.Context) (entities.Application, error) {
-	return (*a.db).GetApplicationById(id, ctx)
+	application, err := (*a.db).GetApplicationById(id, ctx)
+	if err != nil {
+		return entities.Application{}, fmt.Errorf("500")
+	}
+
+	application.File, err = (*a.fs).GetApplicationFile(application.Link, ctx)
+	if err != nil {
+		return entities.Application{}, fmt.Errorf("500")
+	}
+
+	return application, nil
 }
 
 func (a *Application) Add(application entities.Application, ctx context.Context) error {
@@ -49,6 +68,12 @@ func (a *Application) Add(application entities.Application, ctx context.Context)
 	}
 
 	application.CreatedAt = time.Now()
+
+	var err error
+	application.Link, err = (*a.fs).AddApplicationFile(application.Name, application.File, ctx)
+	if err != nil {
+		return err
+	}
 
 	return (*a.db).AddApplication(application, ctx)
 }
@@ -67,8 +92,13 @@ func (a *Application) Update(application entities.Application, ctx context.Conte
 	return (*a.db).UpdateApplication(application, ctx)
 }
 
-func (a *Application) Delete(id, userID string, ctx context.Context) error {
-	return (*a.db).DeleteApplication(id, userID, ctx)
+func (a *Application) Delete(application entities.Application, userId string, ctx context.Context) error {
+	err := (*a.fs).DeleteApplicationFile(application.Link, ctx)
+	if err != nil {
+		return err
+	}
+
+	return (*a.db).DeleteApplication(application.Id, userId, ctx)
 }
 
 func (a *Application) ChangeStatusToFinish(application entities.Application, ctx context.Context) error {

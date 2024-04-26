@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS Students (
     enroll_year INT NOT NULL,
     specialization VARCHAR(100) NOT NULL,
     enroll_order_number VARCHAR(100) NOT NULL,
+    link_photo VARCHAR(100) NULL,
 
     CONSTRAINT student_email_unique UNIQUE (email)
 );
@@ -46,10 +47,12 @@ CREATE TABLE IF NOT EXISTS PhoneNumbers (
 CREATE TABLE IF NOT EXISTS Applications (
     id UUID PRIMARY KEY,
     student_id UUID REFERENCES Students(id) ON DELETE SET NULL,
+    application_name VARCHAR(50) NOT NULL,
     contact_info VARCHAR(50) NOT NULL,
     application_text TEXT NOT NULL,
     application_status VARCHAR(50) NOT NULL,
-    created_at DATE NOT NULL
+    created_at DATE NOT NULL,
+    link_to_application VARCHAR(50) NULL,
 );
 
 CREATE TABLE IF NOT EXISTS StudentsDocuments (

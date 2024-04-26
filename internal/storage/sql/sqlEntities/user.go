@@ -5,12 +5,12 @@ import (
 )
 
 type User struct {
-	Id        uuid.UUID `db:'id'`
-	FirstName string    `db:'first_name'`
-	LastName  string    `db:'last_name'`
-	Surname   string    `db:'surname'`
-	Email     string    `db:'email'`
-	Password  string    `db:'password'`
-	Medicine  string    `db:'medicine-book'`
-	Role      string    `db:'user-role'`
+	Id        uuid.UUID `db:"id"`
+	FirstName string    `db:"first_name"`
+	LastName  string    `db:"last_name"`
+	Surname   string    `db:"surname"`
+	Email     string    `db:"email"`
+	Password  string    `db:"password"`
+	Medicine  string    `db:"medicine_book"`
+	Role      string    `db:"user_role"`
 }

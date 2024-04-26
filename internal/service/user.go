@@ -20,9 +20,9 @@ type User struct {
 	db *UserDb
 }
 
-func NewUser(db *UserDb) User {
+func NewUser(db UserDb) User {
 	return User{
-		db: db,
+		db: &db,
 	}
 }
 

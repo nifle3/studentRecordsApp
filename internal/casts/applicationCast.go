@@ -23,9 +23,11 @@ func ApplicationServiceToSql(application entities.Application, _ context.Context
 	return sqlEntities.Application{
 		Id:        id,
 		StudentId: studentId,
+		Name:      application.Name,
 		Text:      application.Text,
 		Status:    application.Status,
 		CreatedAt: application.CreatedAt,
+		Link:      application.Link,
 	}, nil
 }
 
@@ -38,9 +40,11 @@ func ApplicationServiceToSqlWithOutId(application entities.Application, _ contex
 	return sqlEntities.Application{
 		Id:        uuid.UUID{},
 		StudentId: studentId,
+		Name:      application.Name,
 		Text:      application.Text,
 		Status:    application.Status,
 		CreatedAt: application.CreatedAt,
+		Link:      application.Link,
 	}, nil
 }
 
@@ -48,8 +52,10 @@ func ApplicationSqlToService(application sqlEntities.Application, _ context.Cont
 	return entities.Application{
 		Id:        application.Id.String(),
 		StudentId: application.StudentId.String(),
+		Name:      application.Name,
 		Text:      application.Text,
 		Status:    application.Status,
 		CreatedAt: application.CreatedAt,
+		Link:      application.Link,
 	}
 }

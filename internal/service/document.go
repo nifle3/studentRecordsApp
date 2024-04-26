@@ -17,21 +17,22 @@ type DocumentDb interface {
 	UpdateStudentsDocument(document entities.Document, ctx context.Context) error
 }
 
-type DocumentFileStorage interface {
+type DocumentFS interface {
 	GetDocumentFile(link string, ctx context.Context) ([]byte, error)
-	AddDocumentFile(file []byte, ctx context.Context) (string, error)
+	AddDocumentFile(name string, file []byte, ctx context.Context) (string, error)
 	DeleteDocumentFile(link string, ctx context.Context) error
-	UpdateDocumentFile(file []byte, link string, ctx context.Context) error
+	UpdateDocumentFile(file []byte, link string, ctx context.Context) (string, error)
 }
 
 type Document struct {
-	db          *DocumentDb
-	fileStorage *DocumentFileStorage
+	db *DocumentDb
+	fs *DocumentFS
 }
 
-func NewsDocument(db *DocumentDb) Document {
+func NewDocument(db DocumentDb, fs DocumentFS) Document {
 	return Document{
-		db: db,
+		db: &db,
+		fs: &fs,
 	}
 }
 
@@ -41,7 +42,7 @@ func (d *Document) Add(document entities.Document, ctx context.Context) error {
 	}
 
 	var err error
-	document.Link, err = (*d.fileStorage).AddDocumentFile(document.File, ctx)
+	document.Link, err = (*d.fs).AddDocumentFile(document.Name, document.File, ctx)
 	if err != nil {
 		return fmt.Errorf("500")
 	}
@@ -57,13 +58,14 @@ func (d *Document) Update(document entities.Document, userId string, ctx context
 	}
 
 	document.CreatedAt = time.Now()
-
-	err := (*d.db).UpdateStudentsDocument(document, ctx)
+	result, err := (*d.fs).UpdateDocumentFile(document.File, document.Link, ctx)
 	if err != nil {
 		return fmt.Errorf("500")
 	}
 
-	err = (*d.fileStorage).UpdateDocumentFile(document.File, document.Link, ctx)
+	document.Link = result
+
+	err = (*d.db).UpdateStudentsDocument(document, ctx)
 	if err != nil {
 		return fmt.Errorf("500")
 	}
@@ -77,7 +79,7 @@ func (d *Document) Delete(id, link, userId string, ctx context.Context) error {
 		return fmt.Errorf("500")
 	}
 
-	err = (*d.fileStorage).DeleteDocumentFile(link, ctx)
+	err = (*d.fs).DeleteDocumentFile(link, ctx)
 	if err != nil {
 		return fmt.Errorf("500")
 	}
@@ -91,7 +93,7 @@ func (d *Document) GetById(id, userId string, ctx context.Context) (entities.Doc
 		return entities.Document{}, fmt.Errorf("500")
 	}
 
-	document.File, err = (*d.fileStorage).GetDocumentFile(document.Link, ctx)
+	document.File, err = (*d.fs).GetDocumentFile(document.Link, ctx)
 	if err != nil {
 		return entities.Document{}, fmt.Errorf("500")
 	}
@@ -118,7 +120,7 @@ func (d *Document) GetAllForUser(userId string, ctx context.Context) ([]entities
 		go func() {
 			defer wg.Done()
 
-			documents[idx].File, err = (*d.fileStorage).GetDocumentFile(documents[idx].Link, ctx)
+			documents[idx].File, err = (*d.fs).GetDocumentFile(documents[idx].Link, ctx)
 			if err != nil {
 				errChan <- fmt.Errorf("500")
 			}

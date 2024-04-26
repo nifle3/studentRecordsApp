@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+
 	"studentRecordsApp/internal/service/entites"
 )
 
@@ -15,13 +16,22 @@ type StudentDb interface {
 	GetStudentByEmail(email string, ctx context.Context) (entities.Student, error)
 }
 
-type Student struct {
-	db *StudentDb
+type StudentFS interface {
+	GetPhotoStudentFile(link string, ctx context.Context) ([]byte, error)
+	AddPhotoStudentFile(name string, file []byte, ctx context.Context) (string, error)
+	DeletePhotoStudentFile(link string, ctx context.Context) error
+	UpdatePhotoStudentFile(file []byte, link string, ctx context.Context) (string, error)
 }
 
-func NewStudent(db *StudentDb) Student {
+type Student struct {
+	db *StudentDb
+	fs *StudentFS
+}
+
+func NewStudent(db StudentDb, fs StudentFS) Student {
 	return Student{
-		db: db,
+		db: &db,
+		fs: &fs,
 	}
 }
 
@@ -32,10 +42,20 @@ func (s Student) Add(student entities.Student, ctx context.Context) error {
 
 	err := student.HashPassword()
 	if err != nil {
-		return err
+		return fmt.Errorf("500")
 	}
 
-	return (*s.db).AddStudent(student, ctx)
+	student.LinkPhoto, err = (*s.fs).AddPhotoStudentFile(student.GetFullName(), student.Photo, ctx)
+	if err != nil {
+		return fmt.Errorf("500")
+	}
+
+	err = (*s.db).AddStudent(student, ctx)
+	if err != nil {
+		return fmt.Errorf("500")
+	}
+
+	return nil
 }
 
 func (s Student) Update(student entities.Student, ctx context.Context) error {
@@ -43,7 +63,18 @@ func (s Student) Update(student entities.Student, ctx context.Context) error {
 		return fmt.Errorf("400")
 	}
 
-	return (*s.db).UpdateStudent(student, ctx)
+	var err error
+	student.LinkPhoto, err = (*s.fs).UpdatePhotoStudentFile(student.Photo, student.GetFullName(), ctx)
+	if err != nil {
+		return fmt.Errorf("500")
+	}
+
+	err = (*s.db).UpdateStudent(student, ctx)
+	if err != nil {
+		return fmt.Errorf("500")
+	}
+
+	return nil
 }
 
 func (s Student) checkCorrectStudent(student entities.Student, _ context.Context) bool {
@@ -57,12 +88,24 @@ func (s Student) checkCorrectStudent(student entities.Student, _ context.Context
 		student.CheckPassword()
 }
 
-func (s Student) Delete(id string, ctx context.Context) error {
-	return (*s.db).DeleteStudent(id, ctx)
+func (s Student) Delete(student entities.Student, ctx context.Context) error {
+	err := (*s.fs).DeletePhotoStudentFile(student.LinkPhoto, ctx)
+	if err != nil {
+		return err
+	}
+
+	return (*s.db).DeleteStudent(student.Id, ctx)
 }
 
 func (s Student) Get(id string, ctx context.Context) (entities.Student, error) {
-	return (*s.db).GetStudent(id, ctx)
+	student, err := (*s.db).GetStudent(id, ctx)
+	if err != nil {
+		return entities.Student{}, err
+	}
+
+	student.Photo, err = (*s.fs).GetPhotoStudentFile(student.LinkPhoto, ctx)
+
+	return student, err
 }
 
 func (s Student) GetAll(ctx context.Context) ([]entities.Student, error) {
