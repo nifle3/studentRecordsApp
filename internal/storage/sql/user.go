@@ -16,7 +16,7 @@ func (s *Storage) AddUser(user entities.User, ctx context.Context) error {
 
 	_, err := s.db.ExecContext(ctx,
 		`INSERT INTO Users (id, first_name, last_name, surname, email, password, medecine_book, user_role) 
-                VALUES(?,?,?,?,?,?,?,?)`,
+                VALUES($1,$2,$3,$4,$5,$6,$7,$8);`,
 		sqlUser.Id, sqlUser.FirstName, sqlUser.LastName, sqlUser.Surname, sqlUser.Email, sqlUser.Password,
 		sqlUser.Medicine, sqlUser.Role,
 	)
@@ -31,18 +31,19 @@ func (s *Storage) UpdateUser(user entities.User, ctx context.Context) error {
 	}
 
 	_, err = s.db.ExecContext(ctx,
-		`UPDATE Users SET first_name=?, last_name=?, surname=?, email=?, medecine_book=? 
-                 WHERE id = ?`, sqlUser.FirstName, sqlUser.LastName, sqlUser.Surname, sqlUser.Email, sqlUser.Medicine,
+		`UPDATE Users SET first_name=$1, last_name=$2, surname=$3, email=$4, medecine_book=$5 
+                 WHERE id = $6;`, sqlUser.FirstName, sqlUser.LastName, sqlUser.Surname, sqlUser.Email, sqlUser.Medicine,
 		sqlUser.Id,
 	)
 
 	return err
 }
 
-func (s *Storage) GetUserByEmail(email string, ctx context.Context) (entities.User, error) {
+func (s *Storage) GetUserByEmailAndRole(email, role string, ctx context.Context) (entities.User, error) {
 	var result entities.User
 
-	err := s.db.QueryRowContext(ctx, `SELECT * FROM Users WHERE email = ?`, email).Scan(&result)
+	err := s.db.QueryRowContext(ctx, `SELECT * FROM Users WHERE email = $1 AND user_role = $2;`, email, role).
+		Scan(&result)
 
 	return result, err
 }
@@ -50,13 +51,13 @@ func (s *Storage) GetUserByEmail(email string, ctx context.Context) (entities.Us
 func (s *Storage) GetUser(id string, ctx context.Context) (entities.User, error) {
 	var result entities.User
 
-	err := s.db.QueryRowContext(ctx, `SELECT * FROM Users WHERE id = ?`, id).Scan(&result)
+	err := s.db.QueryRowContext(ctx, `SELECT * FROM Users WHERE id = $1;`, id).Scan(&result)
 
 	return result, err
 }
 
 func (s *Storage) GetUsers(ctx context.Context) ([]entities.User, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT * FROM Users`)
+	rows, err := s.db.QueryContext(ctx, `SELECT * FROM Users;`)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +83,7 @@ func (s *Storage) DeleteUser(id string, ctx context.Context) error {
 		return err
 	}
 
-	_, err = s.db.ExecContext(ctx, `DELETE FROM Users WHERE id = ?`, uuId)
+	_, err = s.db.ExecContext(ctx, `DELETE FROM Users WHERE id = $1;`, uuId)
 
 	return err
 }

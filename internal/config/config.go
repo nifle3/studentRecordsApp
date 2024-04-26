@@ -11,7 +11,7 @@ var once sync.Once
 
 func GetConfig() Config {
 	once.Do(func() {
-		singleton = new()
+		singleton = config()
 	})
 
 	return singleton
@@ -44,83 +44,28 @@ type ServerConfig struct {
 }
 
 func (c *Config) GetDbConnectionString() string {
-	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		c.DbHost, c.DbPort, c.DbUser, c.DbPassword, c.DbName, c.DbSSLMode)
+	return fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v",
+		c.DbUser, c.DbPassword, c.DbHost, c.DbPort, c.DbName, c.DbSSLMode)
 }
 
-func new() Config {
-	dbUser, isSet := os.LookupEnv("DB_USER")
-	if !isSet {
-		panic("DB_USER isnt set")
-	}
-
-	dbPassword, isSet := os.LookupEnv("DB_PASSWORD")
-	if !isSet {
-		panic("DB_PASSWORD isnt set")
-	}
-
-	dbHost, isSet := os.LookupEnv("DB_HOST")
-	if !isSet {
-		panic("DB_HOST isnt set")
-	}
-
-	dbPort, isSet := os.LookupEnv("DB_PORT")
-	if !isSet {
-		panic("DB_PORT isnt set")
-	}
-
-	dbName, isSet := os.LookupEnv("DB_NAME")
-	if !isSet {
-		panic("DB_NAME isnt set")
-	}
-
-	dbSSLMode, isSet := os.LookupEnv("DB_SSL")
-	if !isSet {
-		panic("DB_SSL isnt set")
-	}
-
-	fsUser, isSet := os.LookupEnv("FS_USER")
-	if !isSet {
-		panic("FS_USER isnt set")
-	}
-
-	fsPassword, isSet := os.LookupEnv("FS_PASSWORD")
-	if !isSet {
-		panic("FS_PASSWORD isnt set")
-	}
-
-	fsEndPoint, isSet := os.LookupEnv("FS_END_POINT")
-	if !isSet {
-		panic("FS_END_POINT isnt set")
-	}
-
-	serverPort, isSet := os.LookupEnv("SERVER_PORT")
-	if !isSet {
-		panic("SERVER_PORT isnt set")
-	}
-
-	serverHost, isSet := os.LookupEnv("SERVER_HOST")
-	if !isSet {
-		panic("SERVER_HOST isnt set")
-	}
-
+func config() Config {
 	return Config{
 		DbConfig: DbConfig{
-			DbUser:     dbUser,
-			DbPassword: dbPassword,
-			DbHost:     dbHost,
-			DbPort:     dbPort,
-			DbName:     dbName,
-			DbSSLMode:  dbSSLMode,
+			DbUser:     os.Getenv("DB_USER"),
+			DbPassword: os.Getenv("DB_PASSWORD"),
+			DbHost:     os.Getenv("DB_HOST"),
+			DbPort:     os.Getenv("DB_PORT"),
+			DbName:     os.Getenv("DB_NAME"),
+			DbSSLMode:  os.Getenv("DB_SSL"),
 		},
 		FsConfig: FsConfig{
-			FsUser:     fsUser,
-			FsPassword: fsPassword,
-			FsEndPoint: fsEndPoint,
+			FsUser:     os.Getenv("FS_USER"),
+			FsPassword: os.Getenv("FS_PASSWORD"),
+			FsEndPoint: os.Getenv("FS_END_POINT"),
 		},
 		ServerConfig: ServerConfig{
-			ServerPort: serverPort,
-			ServerHost: serverHost,
+			ServerPort: os.Getenv("SERVER_PORT"),
+			ServerHost: os.Getenv("SERVER_HOST"),
 		},
 	}
 }

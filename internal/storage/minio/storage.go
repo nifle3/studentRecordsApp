@@ -3,6 +3,8 @@ package minio
 import (
 	"bytes"
 	"context"
+	"errors"
+	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"studentRecordsApp/internal/service"
@@ -15,9 +17,9 @@ var (
 )
 
 const (
-	documentBucket     = "Document"
-	studentPhotoBucket = "StudentPhoto"
-	applicationBucket  = "Application"
+	documentBucket     = "document"
+	studentPhotoBucket = "student-photo"
+	applicationBucket  = "application"
 )
 
 type Storage struct {
@@ -34,19 +36,19 @@ func New(endpoint, password, login string, isSecure bool, ctx context.Context) (
 	}
 
 	if client.IsOffline() {
-		return nil, err
+		return nil, errors.New("is offline minio")
 	}
 
 	if err := checkBucketExist(client, applicationBucket, ctx); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %s", err.Error(), applicationBucket)
 	}
 
 	if err := checkBucketExist(client, documentBucket, ctx); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %s", err.Error(), documentBucket)
 	}
 
 	if err := checkBucketExist(client, studentPhotoBucket, ctx); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %s", err.Error(), studentPhotoBucket)
 	}
 
 	return &Storage{

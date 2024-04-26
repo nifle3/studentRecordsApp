@@ -18,7 +18,7 @@ func (s *Storage) GetPhoneNumbers(userId string, ctx context.Context) ([]entitie
 
 	results := make([]entities.PhoneNumber, 0)
 
-	rows, err := s.db.QueryContext(ctx, "SELECT * FROM PhoneNumbers WHERE student_id = $1", uuStudentId)
+	rows, err := s.db.QueryContext(ctx, "SELECT * FROM PhoneNumbers WHERE student_id = $1;", uuStudentId)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (s *Storage) AddPhoneNumber(number entities.PhoneNumber, ctx context.Contex
 	}
 
 	_, err = s.db.ExecContext(ctx, `INSERT INTO PhoneNumbers (id, student_id, country_code, city_code, code, description) 
-							VALUES (?, ?, ?, ?, ?)`,
+							VALUES ($1, $2, $3, $4, $5, $6);`,
 		sqlPhone.Id, sqlPhone.StudentId, sqlPhone.CountryCode, sqlPhone.CityCode, sqlPhone.Code, sqlPhone.Description)
 
 	return err
@@ -57,7 +57,7 @@ func (s *Storage) UpdatePhoneNumber(number entities.PhoneNumber, ctx context.Con
 		return err
 	}
 
-	_, err = s.db.ExecContext(ctx, `UPDATE PhoneNumbers SET country_code =?, city_code =?, code =?, description =? WHERE id =?`,
+	_, err = s.db.ExecContext(ctx, `UPDATE PhoneNumbers SET country_code =$1, city_code =$2, code =$3, description =$4 WHERE id =$5;`,
 		sqlPhone.CountryCode, sqlPhone.CityCode, sqlPhone.Code, sqlPhone.Description, sqlPhone.Id)
 
 	return err
@@ -74,6 +74,6 @@ func (s *Storage) DeletePhoneNumber(id, studentId string, ctx context.Context) e
 		return err
 	}
 
-	_, err = s.db.ExecContext(ctx, `DELETE FROM PhoneNumbers WHERE id =? AND student_id =?`, uuId, uuuStudentId)
+	_, err = s.db.ExecContext(ctx, `DELETE FROM PhoneNumbers WHERE id =$1 AND student_id =$2;`, uuId, uuuStudentId)
 	return err
 }

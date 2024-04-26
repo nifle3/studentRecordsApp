@@ -2,8 +2,26 @@ package server
 
 import (
 	"embed"
+	"github.com/golang-jwt/jwt"
 	"net/http"
+
 	"studentRecordsApp/internal/service"
+)
+
+var jwtSecretKey = []byte("very-secret-key")
+
+type jwtClaims struct {
+	Id   string `json:"id"`
+	Role string `json:"role"`
+	jwt.Claims
+}
+
+const (
+	roleWorker  = "employee"
+	roleAdmin   = "admin"
+	roleStudent = "student"
+
+	tokenCookie = "token"
 )
 
 type Server struct {
@@ -29,6 +47,10 @@ func New(application service.Application, student service.Student, phoneNumber s
 }
 
 func (s *Server) Start() error {
+
+	http.HandleFunc("POST /v1/auth", s.auth)
+
+	http.HandleFunc("GET /", s.authPage)
 
 	return http.ListenAndServe(":8080", nil)
 }

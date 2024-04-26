@@ -34,7 +34,7 @@ func (s *Storage) GetApplications(ctx context.Context) ([]entities.Application, 
 }
 
 func (s *Storage) GetApplicationForUser(userId string, ctx context.Context) ([]entities.Application, error) {
-	rows, err := s.db.QueryContext(ctx, "SELECT * FROM Applications WHERE id =? ORDER BY created_at", userId)
+	rows, err := s.db.QueryContext(ctx, "SELECT * FROM Applications WHERE id =$1 ORDER BY created_at", userId)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (s *Storage) GetApplicationForUser(userId string, ctx context.Context) ([]e
 func (s *Storage) GetApplicationById(id string, ctx context.Context) (entities.Application, error) {
 	var app sqlEntities.Application
 
-	err := s.db.QueryRowContext(ctx, "SELECT * FROM Applications WHERE id =?", id).Scan(&app)
+	err := s.db.QueryRowContext(ctx, "SELECT * FROM Applications WHERE id =$1;", id).Scan(&app)
 	if err != nil {
 		return entities.Application{}, err
 	}
@@ -77,7 +77,7 @@ func (s *Storage) AddApplication(application entities.Application, ctx context.C
 
 	_, err = s.db.ExecContext(ctx, `
         INSERT INTO Applications (id, student_id, contact_info, application_text, application_status, created_at) 
-        VALUES (?, ?, ?, ?, ?, ?)`,
+        VALUES ($1, $2, $3, $4, $5, $6);`,
 		sqlApplication.Id, sqlApplication.StudentId, sqlApplication.Text, sqlApplication.Status, sqlApplication.CreatedAt)
 
 	return err
@@ -90,15 +90,15 @@ func (s *Storage) UpdateApplication(application entities.Application, ctx contex
 	}
 
 	_, err = s.db.ExecContext(ctx, `
-        UPDATE Applications SET student_id =?, contact_info =?, application_text =?, application_status =?, created_at =?
-        WHERE id =?`,
+        UPDATE Applications SET student_id =$1, contact_info =$2, application_text =$3, application_status =$4, created_at =$5
+        WHERE id =$6;`,
 		sqlApplication.StudentId, sqlApplication.Text, sqlApplication.Status, sqlApplication.CreatedAt, sqlApplication.Id)
 
 	return err
 }
 
 func (s *Storage) DeleteApplication(id, userId string, ctx context.Context) error {
-	_, err := s.db.ExecContext(ctx, "DELETE FROM Applications WHERE id =? AND student_id =?", id, userId)
+	_, err := s.db.ExecContext(ctx, "DELETE FROM Applications WHERE id =$1 AND student_id =$2;", id, userId)
 
 	return err
 }

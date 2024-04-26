@@ -10,7 +10,7 @@ import (
 type UserDb interface {
 	AddUser(user entities.User, ctx context.Context) error
 	UpdateUser(user entities.User, ctx context.Context) error
-	GetUserByEmail(email string, ctx context.Context) (entities.User, error)
+	GetUserByEmailAndRole(email, role string, ctx context.Context) (entities.User, error)
 	GetUser(id string, ctx context.Context) (entities.User, error)
 	GetUsers(ctx context.Context) ([]entities.User, error)
 	DeleteUser(id string, ctx context.Context) error
@@ -51,8 +51,8 @@ func (u User) Update(user entities.User, ctx context.Context) error {
 	return (*u.db).UpdateUser(user, ctx)
 }
 
-func (u User) Login(password, login string, ctx context.Context) (entities.User, error) {
-	result, err := (*u.db).GetUserByEmail(login, ctx)
+func (u User) Login(password, login, role string, ctx context.Context) (entities.User, error) {
+	result, err := (*u.db).GetUserByEmailAndRole(login, role, ctx)
 	if err != nil {
 		return entities.User{}, err
 	}

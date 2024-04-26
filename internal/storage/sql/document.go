@@ -24,7 +24,7 @@ func (s *Storage) GetStudentsDocumentById(id string, userId string, ctx context.
 	var result sqlEntities.StudentsDocument
 
 	err = s.db.QueryRowContext(ctx,
-		`SELECT * FROM StudentsDocuments WHERE id = ? AND student_id = ?`, uuUserId, uuId).Scan(&result)
+		`SELECT * FROM StudentsDocuments WHERE id = $1 AND student_id = $2;`, uuUserId, uuId).Scan(&result)
 
 	if err != nil {
 		return entities.Document{}, err
@@ -39,7 +39,7 @@ func (s *Storage) GetStudentsDocumentsForUser(userId string, ctx context.Context
 		return nil, err
 	}
 
-	rows, err := s.db.QueryContext(ctx, `SELECT * FROM StudentsDocuments WHERE student_id = ?`, uuUserId)
+	rows, err := s.db.QueryContext(ctx, `SELECT * FROM StudentsDocuments WHERE student_id = $1;`, uuUserId)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (s *Storage) AddStudentsDocument(document entities.Document, ctx context.Co
 	sqlDocument.Id = uuid.New()
 	_, err = s.db.ExecContext(ctx,
 		`INSERT INTO StudentsDocuments (id, student_id, document_name, document_type, document_link_s3, created_at) 
-				VALUES (?,?,?,?,?)`,
+				VALUES ($1,$2,$3,$4,$5, $6);`,
 		sqlDocument.Id, sqlDocument.StudentId, sqlDocument.Name, sqlDocument.Type, sqlDocument.Link, sqlDocument.CreatedAt)
 
 	return err
@@ -88,7 +88,7 @@ func (s *Storage) DeleteStudentsDocument(id string, userId string, ctx context.C
 	}
 
 	_, err = s.db.ExecContext(ctx,
-		`DELETE FROM StudentsDocuments WHERE id = ? AND student_id = ?`, uuId, uuUserId)
+		`DELETE FROM StudentsDocuments WHERE id = $1 AND student_id = $2;`, uuId, uuUserId)
 
 	return err
 }
@@ -100,7 +100,7 @@ func (s *Storage) UpdateStudentsDocument(document entities.Document, ctx context
 	}
 
 	_, err = s.db.ExecContext(ctx,
-		`UPDATE StudentsDocuments SET document_name =?, document_type =?, document_link_s3 =? WHERE id = ? AND student_id = ?`,
+		`UPDATE StudentsDocuments SET document_name =$1, document_type =$2, document_link_s3 =$3 WHERE id =$4 AND student_id = $5;`,
 		sqlDocument.Name, sqlDocument.Type, sqlDocument.Link, sqlDocument.Id, sqlDocument.StudentId)
 
 	return err

@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS Applications (
     application_text TEXT NOT NULL,
     application_status VARCHAR(50) NOT NULL,
     created_at DATE NOT NULL,
-    link_to_application VARCHAR(50) NULL,
+    link_to_application VARCHAR(50) NULL
 );
 
 CREATE TABLE IF NOT EXISTS StudentsDocuments (
