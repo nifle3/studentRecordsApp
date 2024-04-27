@@ -11,21 +11,15 @@ import (
 )
 
 func (s *Storage) GetStudents(ctx context.Context) ([]entities.Student, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT * FROM Users;`)
+	result := make([]sqlEntities.Student, 0)
+	err := s.db.SelectContext(ctx, &result, `SELECT * FROM Users;`)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
 	results := make([]entities.Student, 0)
 
-	for rows.Next() {
-		var result sqlEntities.Student
-		err := rows.Scan(&result)
-		if err != nil {
-			return nil, err
-		}
-
+	for _, result := range result {
 		results = append(results, casts.StudentSqlToEntitie(result, ctx))
 	}
 
@@ -39,7 +33,7 @@ func (s *Storage) GetStudent(id string, ctx context.Context) (entities.Student, 
 	}
 
 	var result sqlEntities.Student
-	err = s.db.QueryRowContext(ctx, `SELECT * FROM Students WHERE id = $1;`, uuId).Scan(&result)
+	err = s.db.GetContext(ctx, &result, `SELECT * FROM Students WHERE id = $1;`, uuId)
 	if err != nil {
 		return entities.Student{}, err
 	}
@@ -98,7 +92,7 @@ func (s *Storage) DeleteStudent(id string, ctx context.Context) error {
 func (s *Storage) GetStudentByEmail(email string, ctx context.Context) (entities.Student, error) {
 	var student sqlEntities.Student
 
-	err := s.db.QueryRowContext(ctx, `SELECT * FROM Students WHERE email =$1;`, email).Scan(&student)
+	err := s.db.GetContext(ctx, &student, `SELECT * FROM Students WHERE email =$1;`, email)
 
 	return casts.StudentSqlToEntitie(student, ctx), err
 }

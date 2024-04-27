@@ -88,13 +88,8 @@ func (s Student) checkCorrectStudent(student entities.Student, _ context.Context
 		student.CheckPassword()
 }
 
-func (s Student) Delete(student entities.Student, ctx context.Context) error {
-	err := (*s.fs).DeletePhotoStudentFile(student.LinkPhoto, ctx)
-	if err != nil {
-		return err
-	}
-
-	return (*s.db).DeleteStudent(student.Id, ctx)
+func (s Student) Delete(id string, ctx context.Context) error {
+	return (*s.db).DeleteStudent(id, ctx)
 }
 
 func (s Student) Get(id string, ctx context.Context) (entities.Student, error) {

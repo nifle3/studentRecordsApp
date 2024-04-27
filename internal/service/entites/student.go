@@ -26,7 +26,6 @@ type Student struct {
 	EnrollYear      int
 	Specialization  string
 	OrderNumber     string
-	Phones          []PhoneNumber
 	LinkPhoto       string
 	Photo           []byte
 }

@@ -2,10 +2,10 @@ package sql
 
 import (
 	"context"
-	"database/sql"
 	"log"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 
 	"studentRecordsApp/internal/service"
@@ -21,11 +21,11 @@ var (
 )
 
 type Storage struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 func New(connectionString string) (*Storage, error) {
-	db, err := sql.Open("postgres", connectionString)
+	db, err := sqlx.Open("postgres", connectionString)
 	if err != nil {
 		return nil, err
 	}
@@ -43,9 +43,9 @@ func New(connectionString string) (*Storage, error) {
 	return &Storage{db}, nil
 }
 
-func startData(db *sql.DB) error {
+func startData(db *sqlx.DB) error {
 	var exist bool
-	err := db.QueryRowContext(context.Background(), `SELECT EXISTS(SELECT * FROM Users)`).Scan(&exist)
+	err := db.GetContext(context.Background(), &exist, `SELECT EXISTS(SELECT * FROM Users)`)
 
 	if err != nil {
 		return err
@@ -62,10 +62,10 @@ func startData(db *sql.DB) error {
 	user1.HashPassword()
 
 	_, err = db.ExecContext(context.Background(),
-		`INSERT INTO Users VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16),($17,$18,$19,$20,$21,$22,$23,$24)`,
-		uuid.New(), "Артём", "Куприянов", "Сергеевич", "nifle3@gmail.com", user1.Password, "123543123", entities.UserAdmin,
-		uuid.New(), "Раниль", "Закиров", "Ильдусович", "homya@gmail.com", user1.Password, "123-45123", entities.UserWorker,
-		uuid.New(), "Антон", "Яковлев", "Дмитриевич", "mersya@gmail.com", user1.Password, "123-123123", entities.UserWorker)
+		`INSERT INTO Users VALUES ($1,$2,$3,$4,$5,$6,$7),($8,$9,$10,$11,$12,$13,$14),($15,$16,$17,$18,$19,$20,$21)`,
+		uuid.New(), "Артём", "Куприянов", "Сергеевич", "nifle3@gmail.com", user1.Password, entities.UserAdmin,
+		uuid.New(), "Раниль", "Закиров", "Ильдусович", "homya@gmail.com", user1.Password, entities.UserWorker,
+		uuid.New(), "Антон", "Яковлев", "Дмитриевич", "mersya@gmail.com", user1.Password, entities.UserWorker)
 
 	return err
 }

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Данные о студентах</title>
+  <!-- Подключение Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Дополнительные стили */
+    body {
+      background-color: #f8f9fa;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="row mt-3">
+    <div class="col">
+      <h2>Данные о студентах</h2>
+    </div>
+  </div>
+  <div class="row mt-5">
+    <div class="col">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Фамилия</th>
+            <th>Имя</th>
+            <th>Отчество</th>
+            <th>Аттестат</th>
+            <th>Дата рождения</th>
+            <th>Тип оплаты</th>
+          </tr>
+        </thead>
+        <tbody id="studentTableBody">
+          <!-- Сюда будут динамически добавляться данные о студентах -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Подключение Bootstrap JS (необходимо для работы интерактивных элементов) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

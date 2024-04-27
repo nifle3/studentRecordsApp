@@ -17,12 +17,12 @@ type UserDb interface {
 }
 
 type User struct {
-	db *UserDb
+	db UserDb
 }
 
 func NewUser(db UserDb) User {
 	return User{
-		db: &db,
+		db: db,
 	}
 }
 
@@ -40,7 +40,7 @@ func (u User) Add(user entities.User, ctx context.Context) error {
 		return err
 	}
 
-	return (*u.db).AddUser(user, ctx)
+	return (u.db).AddUser(user, ctx)
 }
 
 func (u User) Update(user entities.User, ctx context.Context) error {
@@ -48,11 +48,11 @@ func (u User) Update(user entities.User, ctx context.Context) error {
 		return fmt.Errorf("400")
 	}
 
-	return (*u.db).UpdateUser(user, ctx)
+	return (u.db).UpdateUser(user, ctx)
 }
 
 func (u User) Login(password, login, role string, ctx context.Context) (entities.User, error) {
-	result, err := (*u.db).GetUserByEmailAndRole(login, role, ctx)
+	result, err := (u.db).GetUserByEmailAndRole(login, role, ctx)
 	if err != nil {
 		return entities.User{}, err
 	}
@@ -61,13 +61,13 @@ func (u User) Login(password, login, role string, ctx context.Context) (entities
 }
 
 func (u User) Get(userId string, ctx context.Context) (entities.User, error) {
-	return (*u.db).GetUser(userId, ctx)
+	return (u.db).GetUser(userId, ctx)
 }
 
-func (u User) GetAll(ctx context.Context) ([]entities.User, error) {
-	return (*u.db).GetUsers(ctx)
+func (u User) GetAllWorker(ctx context.Context) ([]entities.User, error) {
+	return (u.db).GetUsers(ctx)
 }
 
 func (u User) Delete(userId string, ctx context.Context) error {
-	return (*u.db).DeleteUser(userId, ctx)
+	return (u.db).DeleteUser(userId, ctx)
 }

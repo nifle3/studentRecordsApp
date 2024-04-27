@@ -62,6 +62,6 @@ func (p *PhoneNumber) Update(number entities.PhoneNumber, ctx context.Context) e
 	return (*p.db).UpdatePhoneNumber(number, ctx)
 }
 
-func (p *PhoneNumber) Delete(number entities.PhoneNumber, ctx context.Context) error {
-	return (*p.db).DeletePhoneNumber(number.Id, number.StudentId, ctx)
+func (p *PhoneNumber) Delete(id, userId string, ctx context.Context) error {
+	return (*p.db).DeletePhoneNumber(id, userId, ctx)
 }

@@ -2,8 +2,8 @@ package casts
 
 import (
 	"context"
-
 	"github.com/google/uuid"
+	"studentRecordsApp/internal/transport/server/jsonStruct"
 
 	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
@@ -77,7 +77,6 @@ func StudentSqlToEntitie(student sqlEntities.Student, _ context.Context) entitie
 		EnrollYear:      student.EnrollYear,
 		Specialization:  student.Specialization,
 		OrderNumber:     student.OrderNumber,
-		Phones:          nil,
 	}
 }
 
@@ -106,6 +105,83 @@ func StudentSqlToEntitieWithPhone(student sqlEntities.Student, phones []sqlEntit
 		EnrollYear:      student.EnrollYear,
 		Specialization:  student.Specialization,
 		OrderNumber:     student.OrderNumber,
-		Phones:          entitesPhone,
+	}
+}
+
+func StudentEntitieToJsonShort(student entities.Student, _ context.Context) jsonStruct.StudentShort {
+	return jsonStruct.StudentShort{
+		Id:         student.Id,
+		FirstName:  student.FirstName,
+		LastName:   student.LastName,
+		Surname:    student.Surname,
+		EnrollYear: student.EnrollYear,
+		Photo:      student.Photo,
+	}
+}
+
+func StudentEntitieToJson(student entities.Student, _ context.Context) jsonStruct.StudentLong {
+	return jsonStruct.StudentLong{
+		Id:              student.Id,
+		FirstName:       student.FirstName,
+		LastName:        student.LastName,
+		Surname:         student.Surname,
+		PassportSeria:   student.PassportSeria,
+		PassportNumber:  student.PassportNumber,
+		BirthDate:       student.BirthDate,
+		Email:           student.Email,
+		Country:         student.Country,
+		City:            student.City,
+		Street:          student.Street,
+		HouseNumber:     student.HouseNumber,
+		ApartmentNumber: student.ApartmentNumber,
+		EnrollYear:      student.EnrollYear,
+		Specialization:  student.Specialization,
+		OrderNumber:     student.OrderNumber,
+		Photo:           student.Photo,
+	}
+}
+
+func StudentJsonWithoutLinkToEntitie(student jsonStruct.StudentLongWithoutLink, _ context.Context) entities.Student {
+	return entities.Student{
+		FirstName:       student.FirstName,
+		LastName:        student.LastName,
+		Surname:         student.Surname,
+		PassportSeria:   student.PassportSeria,
+		PassportNumber:  student.PassportNumber,
+		BirthDate:       student.BirthDate,
+		Email:           student.Email,
+		Password:        student.Password,
+		Country:         student.Country,
+		City:            student.City,
+		Street:          student.Street,
+		HouseNumber:     student.HouseNumber,
+		ApartmentNumber: student.ApartmentNumber,
+		EnrollYear:      student.EnrollYear,
+		Specialization:  student.Specialization,
+		OrderNumber:     student.OrderNumber,
+		Photo:           student.Photo,
+	}
+}
+
+func StudentJsonToEntitie(student jsonStruct.StudentLong, _ context.Context) entities.Student {
+	return entities.Student{
+		Id:              student.Id,
+		FirstName:       student.FirstName,
+		LastName:        student.LastName,
+		Surname:         student.Surname,
+		PassportSeria:   student.PassportSeria,
+		PassportNumber:  student.PassportNumber,
+		BirthDate:       student.BirthDate,
+		Email:           student.Email,
+		Country:         student.Country,
+		City:            student.City,
+		Street:          student.Street,
+		HouseNumber:     student.HouseNumber,
+		ApartmentNumber: student.ApartmentNumber,
+		EnrollYear:      student.EnrollYear,
+		Specialization:  student.Specialization,
+		OrderNumber:     student.OrderNumber,
+		LinkPhoto:       student.LinkPhoto,
+		Photo:           student.Photo,
 	}
 }

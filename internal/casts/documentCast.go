@@ -2,6 +2,7 @@ package casts
 
 import (
 	"context"
+	"studentRecordsApp/internal/transport/server/jsonStruct"
 
 	"github.com/google/uuid"
 
@@ -55,5 +56,37 @@ func DocumentSqlToEntite(document sqlEntities.StudentsDocument, _ context.Contex
 		Link:      document.Link,
 		CreatedAt: document.CreatedAt,
 		File:      nil,
+	}
+}
+
+func DocumentEntiteToJson(document entities.Document, _ context.Context) jsonStruct.Document {
+	return jsonStruct.Document{
+		Id:        document.Id,
+		StudentId: document.StudentId,
+		Name:      document.Name,
+		Type:      document.Type,
+		Link:      document.Link,
+		CreatedAt: document.CreatedAt,
+		File:      document.File,
+	}
+}
+
+func DocumentEntiteToJsonShort(document entities.Document, _ context.Context) jsonStruct.DocumentWithoutFile {
+	return jsonStruct.DocumentWithoutFile{
+		Id:        document.Id,
+		StudentId: document.StudentId,
+		Name:      document.Name,
+		Type:      document.Type,
+		Link:      document.Link,
+		CreatedAt: document.CreatedAt,
+	}
+}
+
+func DocumentForAddedToEntite(document jsonStruct.DocumentForAdded, _ context.Context) entities.Document {
+	return entities.Document{
+		StudentId: document.StudentId,
+		Name:      document.Name,
+		Type:      document.Type,
+		File:      document.File,
 	}
 }

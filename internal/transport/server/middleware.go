@@ -1,34 +1,45 @@
 package server
 
 import (
-	"github.com/golang-jwt/jwt"
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/labstack/gommon/log"
 	"net/http"
 )
 
-func (s *Server) authMiddleware(next http.HandlerFunc, requireRole string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("token")
-		if err == nil {
-			w.WriteHeader(400)
+func (s *Server) authMiddleware(requireRole string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cookie, err := c.Cookie("token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, err)
+			return
 		}
 
-		withClaims, err := jwt.ParseWithClaims(cookie.Value, &jwtClaims{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(cookie, &jwtClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return jwtSecretKey, nil
 		})
 
-		value, ok := withClaims.Claims.(jwtClaims)
+		if err != nil {
+			log.Errorf("%s", err.Error())
+			c.JSON(http.StatusBadRequest, err)
+			return
+		}
+
+		claims, ok := token.Claims.(*jwtClaims)
 		if !ok {
-			w.WriteHeader(400)
+			log.Errorf("%s", err.Error())
+			c.Status(http.StatusBadRequest)
 			return
 		}
 
-		if value.Role != requireRole {
-			w.WriteHeader(403)
+		if claims.Role != requireRole {
+			c.Status(http.StatusUnauthorized)
 			return
 		}
 
-		r.Header.Add("user-id", value.Id)
+		c.Request.Header.Add("id", claims.Id)
+		c.Request.Header.Add("role", claims.Role)
 
-		next(w, r)
+		c.Next()
 	}
 }

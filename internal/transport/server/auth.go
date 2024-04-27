@@ -1,72 +1,75 @@
 package server
 
 import (
-	"html/template"
+	"log"
 	"net/http"
 
-	"github.com/golang-jwt/jwt"
-
 	"studentRecordsApp/internal/service/entites"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type authResponse struct {
-	Email    string
-	Password string
-	Role     string
+	Email    string `json:"email" form:"email"`
+	Password string `json:"password" form:"password"`
+	Role     string `json:"role" form:"role"`
 }
 
-func (s *Server) auth(w http.ResponseWriter, r *http.Request) {
-	result := authResponse{
-		Email:    r.FormValue("email"),
-		Password: r.FormValue("password"),
-		Role:     r.FormValue("role"),
-	}
-
-	if result.Role == roleStudent {
-		student, b, err := s.student.Login(result.Email, result.Password, r.Context())
-		if err != nil || !b {
-			tmp, _ := template.ParseFS(s.fs, "log.gohtml")
-			tmp.Execute(w, true)
-			return
-		}
-
-		setJwt(w, student.Id, result.Role)
-		w.Write([]byte("Hello student"))
+func (s *Server) auth(c *gin.Context) {
+	var response authResponse
+	if err := c.ShouldBindJSON(&response); err != nil {
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	var user entities.User
-	var err error
+	log.Printf("%#v", response)
 
-	if result.Role == roleAdmin {
-		user, err = s.user.Login(result.Password, result.Email, entities.UserAdmin, r.Context())
+	if response.Role == roleStudent {
+		student, isLogin, err := s.student.Login(response.Email, response.Password, c)
 		if err != nil {
-			tmp, _ := template.ParseFS(s.fs, "log.gohtml")
-			tmp.Execute(w, true)
-			w.WriteHeader(500)
+			c.JSON(http.StatusInternalServerError, err)
 			return
 		}
 
-		w.Write([]byte("hello admin"))
-	} else if result.Role == roleWorker {
-		user, err = s.user.Login(result.Password, result.Email, entities.UserWorker, r.Context())
-		if err != nil {
-			tmp, _ := template.ParseFS(s.fs, "log.gohtml")
-			tmp.Execute(w, true)
+		if !isLogin {
+			c.JSON(http.StatusUnauthorized, err)
 			return
 		}
 
-		w.Write([]byte("hello worker"))
-	} else {
-		w.WriteHeader(400)
+		setJwt(c, student.Id, response.Role)
+		c.Status(http.StatusOK)
 		return
 	}
 
-	setJwt(w, user.Id, result.Role)
-	w.WriteHeader(200)
+	if response.Role == roleAdmin {
+		user, err := s.user.Login(response.Password, response.Email, entities.UserAdmin, c)
+		if err != nil {
+			log.Printf("%s", err.Error())
+			c.JSON(http.StatusUnauthorized, err)
+			return
+		}
+
+		setJwt(c, user.Id, response.Role)
+		c.Status(http.StatusOK)
+		return
+	}
+
+	if response.Role == roleWorker {
+		user, err := s.user.Login(response.Password, response.Email, entities.UserWorker, c)
+		if err != nil {
+			log.Printf("%s", err.Error())
+			c.JSON(http.StatusUnauthorized, err)
+			return
+		}
+
+		setJwt(c, user.Id, response.Role)
+		c.Status(http.StatusOK)
+		return
+	}
 }
 
-func setJwt(w http.ResponseWriter, id, role string) {
+func setJwt(c *gin.Context, id, role string) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaims{
 		Id:   id,
 		Role: role,
@@ -74,15 +77,9 @@ func setJwt(w http.ResponseWriter, id, role string) {
 
 	signedString, err := token.SignedString(jwtSecretKey)
 	if err != nil {
-		w.WriteHeader(500)
+		c.Status(500)
 		return
 	}
 
-	cookie := &http.Cookie{
-		Name:     tokenCookie,
-		Value:    signedString,
-		HttpOnly: true,
-	}
-
-	http.SetCookie(w, cookie)
+	c.SetCookie(tokenCookie, signedString, 3600, "/", "localhost", false, true)
 }

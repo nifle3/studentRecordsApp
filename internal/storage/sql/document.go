@@ -23,8 +23,8 @@ func (s *Storage) GetStudentsDocumentById(id string, userId string, ctx context.
 
 	var result sqlEntities.StudentsDocument
 
-	err = s.db.QueryRowContext(ctx,
-		`SELECT * FROM StudentsDocuments WHERE id = $1 AND student_id = $2;`, uuUserId, uuId).Scan(&result)
+	err = s.db.GetContext(ctx, &result,
+		`SELECT * FROM StudentsDocuments WHERE id = $1 AND student_id = $2;`, uuUserId, uuId)
 
 	if err != nil {
 		return entities.Document{}, err
@@ -39,22 +39,14 @@ func (s *Storage) GetStudentsDocumentsForUser(userId string, ctx context.Context
 		return nil, err
 	}
 
-	rows, err := s.db.QueryContext(ctx, `SELECT * FROM StudentsDocuments WHERE student_id = $1;`, uuUserId)
+	sqlResults := make([]sqlEntities.StudentsDocument, 0)
+	err = s.db.SelectContext(ctx, &sqlResults, `SELECT * FROM StudentsDocuments WHERE student_id = $1;`, uuUserId)
 	if err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
-
-	results := make([]entities.Document, 0)
-
-	for rows.Next() {
-		var result sqlEntities.StudentsDocument
-		err = rows.Scan(&result)
-		if err != nil {
-			return nil, err
-		}
-
+	results := make([]entities.Document, 0, len(sqlResults))
+	for _, result := range sqlResults {
 		results = append(results, casts.DocumentSqlToEntite(result, ctx))
 	}
 

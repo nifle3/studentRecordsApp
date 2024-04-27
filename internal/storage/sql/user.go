@@ -2,6 +2,7 @@ package sql
 
 import (
 	"context"
+	"log"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 
 	"github.com/google/uuid"
@@ -15,10 +16,10 @@ func (s *Storage) AddUser(user entities.User, ctx context.Context) error {
 	sqlUser.Id = uuid.New()
 
 	_, err := s.db.ExecContext(ctx,
-		`INSERT INTO Users (id, first_name, last_name, surname, email, password, medecine_book, user_role) 
-                VALUES($1,$2,$3,$4,$5,$6,$7,$8);`,
+		`INSERT INTO Users (id, first_name, last_name, surname, email, password, user_role) 
+                VALUES($1,$2,$3,$4,$5,$6,$7);`,
 		sqlUser.Id, sqlUser.FirstName, sqlUser.LastName, sqlUser.Surname, sqlUser.Email, sqlUser.Password,
-		sqlUser.Medicine, sqlUser.Role,
+		sqlUser.Role,
 	)
 
 	return err
@@ -31,8 +32,8 @@ func (s *Storage) UpdateUser(user entities.User, ctx context.Context) error {
 	}
 
 	_, err = s.db.ExecContext(ctx,
-		`UPDATE Users SET first_name=$1, last_name=$2, surname=$3, email=$4, medecine_book=$5 
-                 WHERE id = $6;`, sqlUser.FirstName, sqlUser.LastName, sqlUser.Surname, sqlUser.Email, sqlUser.Medicine,
+		`UPDATE Users SET first_name=$1, last_name=$2, surname=$3, email=$4 
+                 WHERE id = $6;`, sqlUser.FirstName, sqlUser.LastName, sqlUser.Surname, sqlUser.Email,
 		sqlUser.Id,
 	)
 
@@ -40,38 +41,33 @@ func (s *Storage) UpdateUser(user entities.User, ctx context.Context) error {
 }
 
 func (s *Storage) GetUserByEmailAndRole(email, role string, ctx context.Context) (entities.User, error) {
-	var result entities.User
+	var result sqlEntities.User
 
-	err := s.db.QueryRowContext(ctx, `SELECT * FROM Users WHERE email = $1 AND user_role = $2;`, email, role).
-		Scan(&result)
-
-	return result, err
+	var err = s.db.GetContext(ctx, &result, "SELECT * FROM Users WHERE email=$1 AND user_role=$2;", email, role)
+	log.Printf("%#v", result)
+	return casts.UserSqlToEntite(result, ctx), err
 }
 
 func (s *Storage) GetUser(id string, ctx context.Context) (entities.User, error) {
-	var result entities.User
+	var result sqlEntities.User
 
-	err := s.db.QueryRowContext(ctx, `SELECT * FROM Users WHERE id = $1;`, id).Scan(&result)
+	err := s.db.GetContext(ctx, &result, `SELECT * FROM Users WHERE id = $1;`, id)
 
-	return result, err
+	return casts.UserSqlToEntite(result, ctx), err
 }
 
 func (s *Storage) GetUsers(ctx context.Context) ([]entities.User, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT * FROM Users;`)
+	sqlResults := make([]sqlEntities.User, 0)
+
+	err := s.db.SelectContext(ctx, &sqlResults, `SELECT * FROM Users WHERE user_role = $1;`, entities.UserWorker)
 	if err != nil {
 		return nil, err
 	}
 
-	results := make([]entities.User, 0)
+	results := make([]entities.User, 0, len(sqlResults))
 
-	for rows.Next() {
-		var result sqlEntities.User
-		err := rows.Scan(&result)
-		if err != nil {
-			return nil, err
-		}
-
-		results = append(results, casts.UserSqlToEntite(result, ctx))
+	for _, value := range sqlResults {
+		results = append(results, casts.UserSqlToEntite(value, ctx))
 	}
 
 	return results, nil

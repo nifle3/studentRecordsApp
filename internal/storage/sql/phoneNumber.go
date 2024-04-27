@@ -16,22 +16,14 @@ func (s *Storage) GetPhoneNumbers(userId string, ctx context.Context) ([]entitie
 		return nil, err
 	}
 
-	results := make([]entities.PhoneNumber, 0)
-
-	rows, err := s.db.QueryContext(ctx, "SELECT * FROM PhoneNumbers WHERE student_id = $1;", uuStudentId)
+	sqlResults := make([]sqlEntities.PhoneNumber, 0)
+	err = s.db.SelectContext(ctx, &sqlResults, "SELECT * FROM PhoneNumbers WHERE student_id = $1;", uuStudentId)
 	if err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
-
-	for rows.Next() {
-		var result sqlEntities.PhoneNumber
-		err = rows.Scan(&result)
-		if err != nil {
-			return nil, err
-		}
-
+	results := make([]entities.PhoneNumber, 0, len(sqlResults))
+	for _, result := range sqlResults {
 		results = append(results, casts.PhoneNumberSqlToService(result, ctx))
 	}
 

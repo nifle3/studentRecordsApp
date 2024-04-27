@@ -1,6 +1,9 @@
 package entities
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"golang.org/x/crypto/bcrypt"
+	"regexp"
+)
 
 type User struct {
 	Id        string
@@ -9,7 +12,6 @@ type User struct {
 	Surname   string
 	Email     string
 	Password  string
-	Medicine  string
 	// Role must be "Сотрудник" or "Админ"
 	Role string
 }
@@ -19,8 +21,16 @@ func (u *User) CheckIsNotEmpty() bool {
 		u.LastName != "" &&
 		u.Surname != "" &&
 		u.Email != "" &&
-		u.Password != "" &&
-		u.Medicine != ""
+		u.Password != ""
+}
+
+func (u *User) CheckEmail() (bool, error) {
+	regex, err := regexp.Compile(`^[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-z]+$`)
+	if err != nil {
+		return false, err
+	}
+
+	return regex.MatchString(u.Email), nil
 }
 
 func (u *User) HashPassword() error {

@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"embed"
 	"log"
 	"os"
 
@@ -12,9 +11,6 @@ import (
 	"studentRecordsApp/internal/storage/sql"
 	"studentRecordsApp/internal/transport/server"
 )
-
-//go:embed web
-var frontEnd embed.FS
 
 func Start() {
 	cfg := config.GetConfig()
@@ -41,7 +37,7 @@ func Start() {
 	phoneService := service.NewPhoneNumber(storage)
 	log.Printf("services is initialize")
 
-	httpServer := server.New(applicationService, studentService, phoneService, documentService, userService, &frontEnd)
-	log.Printf("Server is listening on port %s", cfg.DbPort)
+	httpServer := server.New(applicationService, studentService, phoneService, documentService, userService)
+	log.Printf("Server is listening on port %s", cfg.ServerPort)
 	log.Fatal(httpServer.Start())
 }

@@ -2,6 +2,7 @@ package casts
 
 import (
 	"context"
+	"studentRecordsApp/internal/transport/server/jsonStruct"
 
 	"github.com/google/uuid"
 
@@ -22,7 +23,6 @@ func UserEntiteToSql(user entities.User, _ context.Context) (sqlEntities.User, e
 		Surname:   user.Surname,
 		Email:     user.Email,
 		Password:  user.Password,
-		Medicine:  user.Medicine,
 	}, nil
 }
 
@@ -34,7 +34,6 @@ func UserEntiteToSqlWithoutId(user entities.User, _ context.Context) sqlEntities
 		Surname:   user.Surname,
 		Email:     user.Email,
 		Password:  user.Password,
-		Medicine:  user.Medicine,
 	}
 }
 
@@ -46,6 +45,46 @@ func UserSqlToEntite(user sqlEntities.User, _ context.Context) entities.User {
 		Surname:   user.Surname,
 		Email:     user.Email,
 		Password:  user.Password,
-		Medicine:  user.Medicine,
+	}
+}
+
+func UserEntitieToJson(user entities.User, _ context.Context) jsonStruct.User {
+	return jsonStruct.User{
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Surname:   user.Surname,
+		Email:     user.Email,
+	}
+}
+
+func UserJsonToEntitie(user jsonStruct.User, role, id string, _ context.Context) entities.User {
+	return entities.User{
+		Id:        id,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Surname:   user.Surname,
+		Email:     user.Email,
+		Role:      role,
+	}
+}
+
+func UserEntitieToJsonWithId(user entities.User, _ context.Context) jsonStruct.UserWithId {
+	return jsonStruct.UserWithId{
+		Id:        user.Id,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Surname:   user.Surname,
+		Email:     user.Email,
+	}
+}
+
+func UserJsonWithIdToEntitie(user jsonStruct.UserWithId, role string, _ context.Context) entities.User {
+	return entities.User{
+		Id:        user.Id,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Surname:   user.Surname,
+		Email:     user.Email,
+		Role:      role,
 	}
 }

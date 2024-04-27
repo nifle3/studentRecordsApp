@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS Users (
     surname VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL,
     password VARCHAR(100) NOT NULL,
-    medecine_book VARCHAR(100) NOT NULL,
     user_role VARCHAR(20) NOT NULL,
 
     CONSTRAINT users_email_unique UNIQUE (email)

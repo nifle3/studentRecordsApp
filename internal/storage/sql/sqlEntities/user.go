@@ -11,6 +11,5 @@ type User struct {
 	Surname   string    `db:"surname"`
 	Email     string    `db:"email"`
 	Password  string    `db:"password"`
-	Medicine  string    `db:"medicine_book"`
 	Role      string    `db:"user_role"`
 }

@@ -55,6 +55,23 @@ services:
       timeout: 3s
       retries: 3
 
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: nifle3123@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: nifle3password
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - prod
+    restart: unless-stopped
+
   minio:
     container_name: minio
     image: quay.io/minio/minio:RELEASE.2024-04-18T19-09-19Z
@@ -99,5 +116,6 @@ networks:
 
 volumes:
   postgres_data:
+  pgadmin_data:
   minio_data_1:
   minio_data_2:

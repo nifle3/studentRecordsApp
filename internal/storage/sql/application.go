@@ -11,26 +11,18 @@ import (
 )
 
 func (s *Storage) GetApplications(ctx context.Context) ([]entities.Application, error) {
-	rows, err := s.db.QueryContext(ctx, "SELECT * FROM Applications ORDER BY created_at")
+	results := make([]sqlEntities.Application, 0)
+	err := s.db.SelectContext(ctx, &results, "SELECT * FROM Applications ORDER BY created_at")
 	if err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
-
-	results := make([]entities.Application, 0)
-
-	for rows.Next() {
-		var application sqlEntities.Application
-		err := rows.Scan(&application)
-		if err != nil {
-			return nil, err
-		}
-
-		results = append(results, casts.ApplicationSqlToService(application, ctx))
+	resultsEntitie := make([]entities.Application, 0, len(results))
+	for _, value := range results {
+		resultsEntitie = append(resultsEntitie, casts.ApplicationSqlToService(value, ctx))
 	}
 
-	return results, nil
+	return resultsEntitie, nil
 }
 
 func (s *Storage) GetApplicationForUser(userId string, ctx context.Context) ([]entities.Application, error) {
@@ -59,7 +51,7 @@ func (s *Storage) GetApplicationForUser(userId string, ctx context.Context) ([]e
 func (s *Storage) GetApplicationById(id string, ctx context.Context) (entities.Application, error) {
 	var app sqlEntities.Application
 
-	err := s.db.QueryRowContext(ctx, "SELECT * FROM Applications WHERE id =$1;", id).Scan(&app)
+	err := s.db.GetContext(ctx, &app, "SELECT * FROM Applications WHERE id =$1;", id)
 	if err != nil {
 		return entities.Application{}, err
 	}

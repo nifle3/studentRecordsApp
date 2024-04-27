@@ -73,13 +73,8 @@ func (d *Document) Update(document entities.Document, userId string, ctx context
 	return nil
 }
 
-func (d *Document) Delete(id, link, userId string, ctx context.Context) error {
+func (d *Document) Delete(id, userId string, ctx context.Context) error {
 	err := (*d.db).DeleteStudentsDocument(id, userId, ctx)
-	if err != nil {
-		return fmt.Errorf("500")
-	}
-
-	err = (*d.fs).DeleteDocumentFile(link, ctx)
 	if err != nil {
 		return fmt.Errorf("500")
 	}

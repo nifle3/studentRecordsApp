@@ -2,6 +2,7 @@ package casts
 
 import (
 	"context"
+	"studentRecordsApp/internal/transport/server/jsonStruct"
 
 	"github.com/google/uuid"
 
@@ -64,6 +65,32 @@ func PhoneNumberSqlToService(number sqlEntities.PhoneNumber, _ context.Context) 
 		Id:          number.Id.String(),
 		StudentId:   number.StudentId.String(),
 		Phone:       number.CountryCode + number.CityCode + number.Code,
+		Description: number.Description,
+	}
+}
+
+func PhoneNumberEntitiesToJson(number entities.PhoneNumber, _ context.Context) jsonStruct.PhoneNumber {
+	return jsonStruct.PhoneNumber{
+		Id:          number.Id,
+		StudentId:   number.StudentId,
+		Phone:       number.Phone,
+		Description: number.Description,
+	}
+}
+
+func PhoneNumberJsonToEntities(number jsonStruct.PhoneNumberWithoutId, _ context.Context) entities.PhoneNumber {
+	return entities.PhoneNumber{
+		StudentId:   number.StudentId,
+		Phone:       number.Phone,
+		Description: number.Description,
+	}
+}
+
+func PhoneNumberJsonLongToEntities(number jsonStruct.PhoneNumber, _ context.Context) entities.PhoneNumber {
+	return entities.PhoneNumber{
+		Id:          number.Id,
+		StudentId:   number.StudentId,
+		Phone:       number.Phone,
 		Description: number.Description,
 	}
 }
