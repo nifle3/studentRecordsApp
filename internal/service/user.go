@@ -27,11 +27,11 @@ func NewUser(db UserDb) User {
 }
 
 func (u User) Add(user entities.User, ctx context.Context) error {
-	if !user.CheckIsNotEmpty() {
+	if !user.IsNotEmpty() {
 		return fmt.Errorf("400")
 	}
 
-	if !user.CheckRole() {
+	if !user.IsRoleCorrect() {
 		return fmt.Errorf("400")
 	}
 
@@ -44,7 +44,7 @@ func (u User) Add(user entities.User, ctx context.Context) error {
 }
 
 func (u User) Update(user entities.User, ctx context.Context) error {
-	if !user.CheckIsNotEmpty() {
+	if !user.IsNotEmpty() {
 		return fmt.Errorf("400")
 	}
 

@@ -2,7 +2,6 @@ package entities
 
 import (
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
 	"regexp"
 	"strings"
 	"time"
@@ -73,20 +72,6 @@ func (s *Student) CheckEmail() (bool, error) {
 	}
 
 	return regex.MatchString(s.Email), nil
-}
-
-func (s *Student) HashPassword() error {
-	hashPassword, err := bcrypt.GenerateFromPassword([]byte(s.Password), 10)
-	if err != nil {
-		return err
-	}
-
-	s.Password = string(hashPassword)
-	return nil
-}
-
-func (s *Student) CheckHash(password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(s.Password), []byte(password))
 }
 
 func (s *Student) GetFullName() string {

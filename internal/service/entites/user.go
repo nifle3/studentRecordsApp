@@ -1,8 +1,7 @@
 package entities
 
 import (
-	"golang.org/x/crypto/bcrypt"
-	"regexp"
+	"strings"
 )
 
 type User struct {
@@ -16,37 +15,15 @@ type User struct {
 	Role string
 }
 
-func (u *User) CheckIsNotEmpty() bool {
-	return u.FirstName != "" &&
-		u.LastName != "" &&
-		u.Surname != "" &&
-		u.Email != "" &&
-		u.Password != ""
+func (u *User) IsNotEmpty() bool {
+	return u.FirstName != "" && !strings.Contains(u.FirstName, " ") &&
+		u.LastName != "" && !strings.Contains(u.LastName, " ") &&
+		u.Surname != "" && !strings.Contains(u.Surname, " ") &&
+		u.Email != "" && !strings.Contains(u.Email, " ") &&
+		u.Password != "" && !strings.Contains(u.Password, " ") &&
+		u.Role != "" && !strings.Contains(u.Role, " ")
 }
 
-func (u *User) CheckEmail() (bool, error) {
-	regex, err := regexp.Compile(`^[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-z]+$`)
-	if err != nil {
-		return false, err
-	}
-
-	return regex.MatchString(u.Email), nil
-}
-
-func (u *User) HashPassword() error {
-	hashPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), 10)
-	if err != nil {
-		return err
-	}
-
-	u.Password = string(hashPassword)
-	return nil
-}
-
-func (u *User) CheckHash(password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
-}
-
-func (u *User) CheckRole() bool {
+func (u *User) IsRoleCorrect() bool {
 	return u.Role == UserAdmin || u.Role == UserWorker
 }

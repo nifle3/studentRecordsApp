@@ -58,7 +58,7 @@ func startData(db *sqlx.DB) error {
 	}
 
 	log.Printf("CREATING start data\n")
-	user1 := entities.User{Password: "qwe123"}
+	user1 := qwe123
 	user1.HashPassword()
 
 	_, err = db.ExecContext(context.Background(),

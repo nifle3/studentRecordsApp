@@ -16,12 +16,12 @@ func TestCheckStatus(t *testing.T) {
 		status   string
 	}{
 		{
-			"valid status",
+			"valid status 1",
 			true,
 			"Создана",
 		},
 		{
-			"valid status",
+			"valid status 2",
 			true,
 			"Закрыта",
 		},

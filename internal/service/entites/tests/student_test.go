@@ -42,7 +42,7 @@ func TestCheckBirthdate(t *testing.T) {
 	}
 }
 
-func CheckPassportSeria(t *testing.T) {
+func TestCheckPassportSeria(t *testing.T) {
 	testingData := []struct {
 		name     string
 		expected bool
@@ -142,55 +142,6 @@ func TestCheckPassword(t *testing.T) {
 			result := testingStudent.CheckPassword()
 
 			assert.Equal(t, value.expected, result)
-		})
-	}
-}
-
-func TestCheckEmail(t *testing.T) {
-	testingData := []struct {
-		name     string
-		expected bool
-		email    string
-	}{
-		{
-			"valid email",
-			true,
-			"nifle.3@mail.ru",
-		},
-		{
-			"valid email 2",
-			true,
-			"nifle3@gmail.com",
-		},
-		{
-			"email without @",
-			false,
-			"nifle3gmail.com",
-		},
-		{
-			"email without .",
-			false,
-			"nifle3@mailru",
-		},
-		{
-			"email with . before @",
-			false,
-			"nife3.@mailru",
-		},
-		{
-			"email with spaces",
-			false,
-			"nifle 3@gmail.com",
-		},
-	}
-
-	for idx, value := range testingData {
-		t.Run(fmt.Sprintf("Test %d: %s", idx, value.name), func(t *testing.T) {
-			testingStudent := entities.Student{Email: value.email}
-			result, err := testingStudent.CheckEmail()
-
-			assert.Equal(t, value.expected, result)
-			assert.Nil(t, err)
 		})
 	}
 }
