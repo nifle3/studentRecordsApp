@@ -1,6 +1,6 @@
 package entities
 
 const (
-    ApplicationCreated = "Создана"
-    ApplicationClosed  = "Закрыта"
+	ApplicationCreated = "Создана"
+	ApplicationClosed  = "Закрыта"
 )

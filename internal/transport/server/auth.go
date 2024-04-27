@@ -26,14 +26,9 @@ func (s *Server) auth(c *gin.Context) {
 	log.Printf("%#v", response)
 
 	if response.Role == roleStudent {
-		student, isLogin, err := s.student.Login(response.Email, response.Password, c)
+		student, err := s.student.Login(response.Email, response.Password, c)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, err)
-			return
-		}
-
-		if !isLogin {
-			c.JSON(http.StatusUnauthorized, err)
 			return
 		}
 

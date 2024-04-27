@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"studentRecordsApp/pkg/password"
 
 	"studentRecordsApp/internal/service/entites"
 )
@@ -40,7 +41,8 @@ func (s Student) Add(student entities.Student, ctx context.Context) error {
 		return fmt.Errorf("400")
 	}
 
-	err := student.HashPassword()
+	var err error
+	student.Password, err = password.Hash(student.Password)
 	if err != nil {
 		return fmt.Errorf("500")
 	}
@@ -107,16 +109,11 @@ func (s Student) GetAll(ctx context.Context) ([]entities.Student, error) {
 	return (*s.db).GetStudents(ctx)
 }
 
-func (s Student) Login(email, password string, ctx context.Context) (entities.Student, bool, error) {
+func (s Student) Login(email, pass string, ctx context.Context) (entities.Student, error) {
 	result, err := (*s.db).GetStudentByEmail(email, ctx)
 	if err != nil {
-		return entities.Student{}, false, err
+		return entities.Student{}, err
 	}
 
-	loginError := result.CheckHash(password)
-	if loginError != nil {
-		return entities.Student{}, false, loginError
-	}
-
-	return result, true, nil
+	return result, password.CheckHash(pass, []byte(result.Password))
 }
