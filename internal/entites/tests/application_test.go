@@ -2,14 +2,15 @@ package tests
 
 import (
 	"fmt"
+	"studentRecordsApp/internal/entites"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"studentRecordsApp/internal/service/entites"
 )
 
 func TestCheckStatus(t *testing.T) {
+	t.Parallel()
+
 	testingData := []struct {
 		name     string
 		expected bool
@@ -44,7 +45,8 @@ func TestCheckStatus(t *testing.T) {
 
 	for idx, value := range testingData {
 		t.Run(fmt.Sprintf("Test %d: %s", idx, value.name), func(t *testing.T) {
-			testingApplication := entities.Application{Status: value.status}
+			t.Parallel()
+			testingApplication := entities.entities{Status: value.status}
 			result := testingApplication.CheckStatus()
 			assert.Equal(t, value.expected, result)
 		})

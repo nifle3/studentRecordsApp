@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"os"
+	"github.com/caarlos0/env"
 	"sync"
 )
 
@@ -24,48 +24,37 @@ type Config struct {
 }
 
 type DbConfig struct {
-	DbUser     string `env:"DB_USER"`
-	DbPassword string `env:"DB_PASSWORD"`
-	DbHost     string `env:"DB_HOST"`
-	DbPort     string `env:"DB_PORT"`
-	DbName     string `env:"DB_NAME"`
-	DbSSLMode  string `env:"DB_SSL"`
+	DbUser     string `env:"DB_USER" envDefault:"user"`
+	DbPassword string `env:"DB_PASSWORD" envDefault:"<password>"`
+	DbHost     string `env:"DB_HOST" envDefault:"localhost"`
+	DbPort     string `env:"DB_PORT" envDefault:"8080"`
+	DbName     string `env:"DB_NAME" envDefault:"student_records"`
+	DbSSLMode  string `env:"DB_SSL" envDefault:"disable"`
 }
 
 type FsConfig struct {
-	FsEndPoint string `env:"FS_END_POINT"`
-	FsUser     string `env:"FS_USER"`
-	FsPassword string `env:"FS_PASSWORD"`
+	FsEndPoint string `env:"FS_END_POINT" envDefault:"9000"`
+	FsUser     string `env:"FS_USER" envDefault:"user"`
+	FsPassword string `env:"FS_PASSWORD" envDefault:"password"`
 }
 
 type ServerConfig struct {
-	ServerPort string `env:"SERVER_PORT"`
-	ServerHost string `env:"SERVER_HOST"`
+	ServerPort   string `env:"SERVER_PORT" envDefault:"8080"`
+	ServerHost   string `env:"SERVER_HOST" envDefault:"localhost"`
+	JwtSecretKey string `env:"JWT_SECRET_KEY" envDefault:"mysecretkey"`
 }
 
-func (c *Config) GetDbConnectionString() string {
+func (c Config) GetDbConnectionString() string {
 	return fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v",
 		c.DbUser, c.DbPassword, c.DbHost, c.DbPort, c.DbName, c.DbSSLMode)
 }
 
 func config() Config {
-	return Config{
-		DbConfig: DbConfig{
-			DbUser:     os.Getenv("DB_USER"),
-			DbPassword: os.Getenv("DB_PASSWORD"),
-			DbHost:     os.Getenv("DB_HOST"),
-			DbPort:     os.Getenv("DB_PORT"),
-			DbName:     os.Getenv("DB_NAME"),
-			DbSSLMode:  os.Getenv("DB_SSL"),
-		},
-		FsConfig: FsConfig{
-			FsUser:     os.Getenv("FS_USER"),
-			FsPassword: os.Getenv("FS_PASSWORD"),
-			FsEndPoint: os.Getenv("FS_END_POINT"),
-		},
-		ServerConfig: ServerConfig{
-			ServerPort: os.Getenv("SERVER_PORT"),
-			ServerHost: os.Getenv("SERVER_HOST"),
-		},
+	var result Config
+	err := env.Parse(&result)
+	if err != nil {
+		panic("Config cant download")
 	}
+
+	return result
 }

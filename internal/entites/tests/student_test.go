@@ -2,15 +2,16 @@ package tests
 
 import (
 	"fmt"
+	"studentRecordsApp/internal/entites"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	"studentRecordsApp/internal/service/entites"
 )
 
 func TestCheckBirthdate(t *testing.T) {
+	t.Parallel()
+
 	testingData := []struct {
 		name      string
 		expected  bool
@@ -34,7 +35,9 @@ func TestCheckBirthdate(t *testing.T) {
 
 	for idx, value := range testingData {
 		t.Run(fmt.Sprintf("Test %d: %s", idx, value.name), func(t *testing.T) {
-			testingStudent := entities.Student{BirthDate: value.birthdate}
+			t.Parallel()
+
+			testingStudent := entities.entities{BirthDate: value.birthdate}
 
 			result := testingStudent.CheckBirthdate()
 			assert.Equal(t, value.expected, result)
@@ -43,6 +46,8 @@ func TestCheckBirthdate(t *testing.T) {
 }
 
 func TestCheckPassportSeria(t *testing.T) {
+	t.Parallel()
+
 	testingData := []struct {
 		name     string
 		expected bool
@@ -67,6 +72,8 @@ func TestCheckPassportSeria(t *testing.T) {
 
 	for idx, value := range testingData {
 		t.Run(fmt.Sprintf("Test %d: %s", idx, value.name), func(t *testing.T) {
+			t.Parallel()
+
 			testingStudent := entities.Student{PassportSeria: value.seria}
 
 			result := testingStudent.CheckPassportSeria()
@@ -76,6 +83,8 @@ func TestCheckPassportSeria(t *testing.T) {
 }
 
 func TestCheckNumber(t *testing.T) {
+	t.Parallel()
+
 	testingData := []struct {
 		name     string
 		expected bool
@@ -100,6 +109,8 @@ func TestCheckNumber(t *testing.T) {
 
 	for idx, value := range testingData {
 		t.Run(fmt.Sprintf("Test %d: %s", idx, value.name), func(t *testing.T) {
+			t.Parallel()
+
 			testingStudent := entities.Student{PassportNumber: value.input}
 			result := testingStudent.CheckNumber()
 
@@ -109,6 +120,8 @@ func TestCheckNumber(t *testing.T) {
 }
 
 func TestCheckPassword(t *testing.T) {
+	t.Parallel()
+
 	testingData := []struct {
 		name     string
 		expected bool
@@ -138,6 +151,8 @@ func TestCheckPassword(t *testing.T) {
 
 	for idx, value := range testingData {
 		t.Run(fmt.Sprintf("Test %d: %s", idx, value.name), func(t *testing.T) {
+			t.Parallel()
+
 			testingStudent := entities.Student{Password: value.password}
 			result := testingStudent.CheckPassword()
 

@@ -3,13 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"studentRecordsApp/internal/entites"
 	"studentRecordsApp/pkg/password"
-
-	"studentRecordsApp/internal/service/entites"
 )
 
 type StudentDb interface {
-	GetStudents(ctx context.Context) ([]entities.Student, error)
+	GetStudents(ctx context.Context) ([]entities.entities, error)
 	GetStudent(id string, ctx context.Context) (entities.Student, error)
 	AddStudent(student entities.Student, ctx context.Context) error
 	UpdateStudent(student entities.Student, ctx context.Context) error

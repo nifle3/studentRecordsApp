@@ -3,13 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"studentRecordsApp/internal/entites"
 	"time"
-
-	"studentRecordsApp/internal/service/entites"
 )
 
 type ApplicationDb interface {
-	GetApplications(ctx context.Context) ([]entities.Application, error)
+	GetApplications(ctx context.Context) ([]entities.entities, error)
 	GetApplicationForUser(userId string, ctx context.Context) ([]entities.Application, error)
 	GetApplicationById(id string, ctx context.Context) (entities.Application, error)
 	AddApplication(application entities.Application, ctx context.Context) error

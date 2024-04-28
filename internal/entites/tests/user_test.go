@@ -3,11 +3,13 @@ package tests
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	entities "studentRecordsApp/internal/service/entites"
+	"studentRecordsApp/internal/entites"
 	"testing"
 )
 
 func TestIsNotEmpty(t *testing.T) {
+	t.Parallel()
+
 	dataSet := []struct {
 		name     string
 		expected bool
@@ -212,6 +214,8 @@ func TestIsNotEmpty(t *testing.T) {
 
 	for idx, value := range dataSet {
 		t.Run(fmt.Sprintf("Test %d: %s", idx, value.name), func(t *testing.T) {
+			t.Parallel()
+
 			result := value.input.IsNotEmpty()
 			assert.Equal(t, value.expected, result)
 		})

@@ -2,15 +2,15 @@ package sql
 
 import (
 	"context"
+	"studentRecordsApp/internal/entites"
 
 	"github.com/google/uuid"
 
 	"studentRecordsApp/internal/casts"
-	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 )
 
-func (s *Storage) GetStudentsDocumentById(id string, userId string, ctx context.Context) (entities.Document, error) {
+func (s *Storage) GetStudentsDocumentById(id string, userId string, ctx context.Context) (entities.entities, error) {
 	uuId, err := uuid.Parse(id)
 	if err != nil {
 		return entities.Document{}, err

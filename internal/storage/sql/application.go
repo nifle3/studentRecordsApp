@@ -2,15 +2,15 @@ package sql
 
 import (
 	"context"
+	"studentRecordsApp/internal/entites"
 
 	"github.com/google/uuid"
 
 	"studentRecordsApp/internal/casts"
-	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 )
 
-func (s *Storage) GetApplications(ctx context.Context) ([]entities.Application, error) {
+func (s *Storage) GetApplications(ctx context.Context) ([]entities.entities, error) {
 	results := make([]sqlEntities.Application, 0)
 	err := s.db.SelectContext(ctx, &results, "SELECT * FROM Applications ORDER BY created_at")
 	if err != nil {

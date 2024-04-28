@@ -3,13 +3,14 @@ package sql
 import (
 	"context"
 	"log"
+	"studentRecordsApp/internal/entites"
+	"studentRecordsApp/pkg/password"
 
 	"github.com/google/uuid"
+	_ "github.com/jackc/pgx"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 
 	"studentRecordsApp/internal/service"
-	"studentRecordsApp/internal/service/entites"
 )
 
 var (
@@ -25,7 +26,7 @@ type Storage struct {
 }
 
 func New(connectionString string) (*Storage, error) {
-	db, err := sqlx.Open("postgres", connectionString)
+	db, err := sqlx.Open("pgx", connectionString)
 	if err != nil {
 		return nil, err
 	}
@@ -58,14 +59,17 @@ func startData(db *sqlx.DB) error {
 	}
 
 	log.Printf("CREATING start data\n")
-	user1 := qwe123
-	user1.HashPassword()
+
+	pass, err := password.Hash("qwe")
+	if err != nil {
+		return err
+	}
 
 	_, err = db.ExecContext(context.Background(),
 		`INSERT INTO Users VALUES ($1,$2,$3,$4,$5,$6,$7),($8,$9,$10,$11,$12,$13,$14),($15,$16,$17,$18,$19,$20,$21)`,
-		uuid.New(), "Артём", "Куприянов", "Сергеевич", "nifle3@gmail.com", user1.Password, entities.UserAdmin,
-		uuid.New(), "Раниль", "Закиров", "Ильдусович", "homya@gmail.com", user1.Password, entities.UserWorker,
-		uuid.New(), "Антон", "Яковлев", "Дмитриевич", "mersya@gmail.com", user1.Password, entities.UserWorker)
+		uuid.New(), "Артём", "Куприянов", "Сергеевич", "nifle3@gmail.com", pass, entities.UserAdmin,
+		uuid.New(), "Раниль", "Закиров", "Ильдусович", "homya@gmail.com", pass, entities.UserWorker,
+		uuid.New(), "Антон", "Яковлев", "Дмитриевич", "mersya@gmail.com", pass, entities.UserWorker)
 
 	return err
 }

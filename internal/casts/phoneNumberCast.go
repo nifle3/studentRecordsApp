@@ -2,16 +2,16 @@ package casts
 
 import (
 	"context"
+	"studentRecordsApp/internal/entites"
 	"studentRecordsApp/internal/transport/server/jsonStruct"
 
 	"github.com/google/uuid"
 
-	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 	"studentRecordsApp/pkg/stringMethod"
 )
 
-func PhoneNumberServiceToSql(number entities.PhoneNumber, _ context.Context) (sqlEntities.PhoneNumber, error) {
+func PhoneNumberServiceToSql(number entities.entities, _ context.Context) (sqlEntities.PhoneNumber, error) {
 	id, err := uuid.Parse(number.Id)
 	if err != nil {
 		return sqlEntities.PhoneNumber{}, err

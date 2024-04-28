@@ -3,9 +3,9 @@ package casts
 import (
 	"context"
 	"github.com/google/uuid"
+	"studentRecordsApp/internal/entites"
 	"studentRecordsApp/internal/transport/server/jsonStruct"
 
-	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 )
 
@@ -81,7 +81,7 @@ func StudentSqlToEntitie(student sqlEntities.Student, _ context.Context) entitie
 }
 
 func StudentSqlToEntitieWithPhone(student sqlEntities.Student, phones []sqlEntities.PhoneNumber, _ context.Context) entities.Student {
-	entitesPhone := make([]entities.PhoneNumber, 0, len(phones))
+	entitesPhone := make([]entities.entities, 0, len(phones))
 
 	for _, value := range phones {
 		entitesPhone = append(entitesPhone, PhoneNumberSqlToService(value, context.Background()))

@@ -2,15 +2,15 @@ package sql
 
 import (
 	"context"
+	"studentRecordsApp/internal/entites"
 
 	"github.com/google/uuid"
 
 	"studentRecordsApp/internal/casts"
-	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 )
 
-func (s *Storage) GetStudents(ctx context.Context) ([]entities.Student, error) {
+func (s *Storage) GetStudents(ctx context.Context) ([]entities.entities, error) {
 	result := make([]sqlEntities.Student, 0)
 	err := s.db.SelectContext(ctx, &result, `SELECT * FROM Users;`)
 	if err != nil {

@@ -3,13 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"studentRecordsApp/internal/entites"
 	"studentRecordsApp/pkg/password"
-
-	"studentRecordsApp/internal/service/entites"
 )
 
 type UserDb interface {
-	AddUser(user entities.User, ctx context.Context) error
+	AddUser(user entities.entities, ctx context.Context) error
 	UpdateUser(user entities.User, ctx context.Context) error
 	GetUserByEmailAndRole(email, role string, ctx context.Context) (entities.User, error)
 	GetUser(id string, ctx context.Context) (entities.User, error)

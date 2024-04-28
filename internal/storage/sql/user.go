@@ -3,12 +3,12 @@ package sql
 import (
 	"context"
 	"log"
+	"studentRecordsApp/internal/entites"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 
 	"github.com/google/uuid"
 
 	"studentRecordsApp/internal/casts"
-	"studentRecordsApp/internal/service/entites"
 )
 
 func (s *Storage) AddUser(user entities.User, ctx context.Context) error {
@@ -59,7 +59,7 @@ func (s *Storage) GetUser(id string, ctx context.Context) (entities.User, error)
 func (s *Storage) GetUsers(ctx context.Context) ([]entities.User, error) {
 	sqlResults := make([]sqlEntities.User, 0)
 
-	err := s.db.SelectContext(ctx, &sqlResults, `SELECT * FROM Users WHERE user_role = $1;`, entities.UserWorker)
+	err := s.db.SelectContext(ctx, &sqlResults, `SELECT * FROM Users WHERE user_role = $1;`, entities.entities.UserWorker)
 	if err != nil {
 		return nil, err
 	}

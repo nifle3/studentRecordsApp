@@ -2,11 +2,11 @@ package server
 
 import (
 	"net/http"
+	"studentRecordsApp/internal/entites"
 
 	"github.com/gin-gonic/gin"
 
 	"studentRecordsApp/internal/casts"
-	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/internal/transport/server/jsonStruct"
 )
 
@@ -72,7 +72,7 @@ func (s *Server) UpdateWorker(c *gin.Context) {
 		return
 	}
 
-	userResult := casts.UserJsonWithIdToEntitie(user, entities.UserWorker, c)
+	userResult := casts.UserJsonWithIdToEntitie(user, entities.entities.UserWorker, c)
 	userResult.Role = entities.UserWorker
 
 	err := s.user.Update(userResult, c)

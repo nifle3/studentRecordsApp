@@ -2,15 +2,15 @@ package casts
 
 import (
 	"context"
+	"studentRecordsApp/internal/entites"
 	"studentRecordsApp/internal/transport/server/jsonStruct"
 
 	"github.com/google/uuid"
 
-	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 )
 
-func ApplicationServiceToSql(application entities.Application, _ context.Context) (sqlEntities.Application, error) {
+func ApplicationServiceToSql(application entities.entities, _ context.Context) (sqlEntities.Application, error) {
 	id, err := uuid.Parse(application.Id)
 	if err != nil {
 		return sqlEntities.Application{}, err

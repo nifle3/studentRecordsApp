@@ -3,8 +3,7 @@ package server
 import (
 	"log"
 	"net/http"
-
-	"studentRecordsApp/internal/service/entites"
+	"studentRecordsApp/internal/entites"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -38,7 +37,7 @@ func (s *Server) auth(c *gin.Context) {
 	}
 
 	if response.Role == roleAdmin {
-		user, err := s.user.Login(response.Password, response.Email, entities.UserAdmin, c)
+		user, err := s.user.Login(response.Password, response.Email, entities.entities.UserAdmin, c)
 		if err != nil {
 			log.Printf("%s", err.Error())
 			c.JSON(http.StatusUnauthorized, err)

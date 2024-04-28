@@ -3,12 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
-
-	"studentRecordsApp/internal/service/entites"
+	"studentRecordsApp/internal/entites"
 )
 
 type PhoneNumberDb interface {
-	GetPhoneNumbers(userId string, ctx context.Context) ([]entities.PhoneNumber, error)
+	GetPhoneNumbers(userId string, ctx context.Context) ([]entities.entities, error)
 	AddPhoneNumber(number entities.PhoneNumber, ctx context.Context) error
 	UpdatePhoneNumber(number entities.PhoneNumber, ctx context.Context) error
 	DeletePhoneNumber(id, studentId string, ctx context.Context) error

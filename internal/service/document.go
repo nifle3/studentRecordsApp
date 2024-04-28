@@ -3,14 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
+	"studentRecordsApp/internal/entites"
 	"sync"
 	"time"
-
-	"studentRecordsApp/internal/service/entites"
 )
 
 type DocumentDb interface {
-	GetStudentsDocumentById(id string, userId string, ctx context.Context) (entities.Document, error)
+	GetStudentsDocumentById(id string, userId string, ctx context.Context) (entities.entities, error)
 	GetStudentsDocumentsForUser(userId string, ctx context.Context) ([]entities.Document, error)
 	AddStudentsDocument(document entities.Document, ctx context.Context) error
 	DeleteStudentsDocument(id string, userId string, ctx context.Context) error

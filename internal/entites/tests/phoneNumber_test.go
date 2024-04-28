@@ -2,18 +2,19 @@ package tests
 
 import (
 	"fmt"
+	"studentRecordsApp/internal/entites"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"studentRecordsApp/internal/service/entites"
 )
 
 func TestCheckCorrectPhone(t *testing.T) {
+	t.Parallel()
+
 	testData := []struct {
 		name     string
 		expected bool
-		input    entities.PhoneNumber
+		input    entities.entities
 	}{
 		{
 			"just numbers",
@@ -82,6 +83,8 @@ func TestCheckCorrectPhone(t *testing.T) {
 
 	for idx, value := range testData {
 		t.Run(fmt.Sprintf("Test %d: %s", idx, value.name), func(t *testing.T) {
+			t.Parallel()
+
 			result, err := value.input.CheckCorrectNumber()
 
 			assert.Equal(t, value.expected, result)
