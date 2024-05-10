@@ -1,101 +1,63 @@
 package server
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
-	"studentRecordsApp/internal/service"
+	"net/http"
+	"time"
 )
 
-var jwtSecretKey = []byte("very-secret-key")
-
-type jwtClaims struct {
-	Id   string `json:"id"`
-	Role string `json:"role"`
-	jwt.RegisteredClaims
+type Opts struct {
+	Port        string
+	IdleTimeout time.Duration
 }
-
-const (
-	roleWorker  = "employee"
-	roleAdmin   = "admin"
-	roleStudent = "student"
-
-	tokenCookie = "token"
-)
 
 type Server struct {
-	application service.Application
-	student     service.Student
-	phoneNumber service.PhoneNumber
-	document    service.Document
-	user        service.User
+	Opts
 }
 
-func New(application service.Application, student service.Student, phoneNumber service.PhoneNumber,
-	document service.Document, user service.User) *Server {
-
-	return &Server{
-		application: application,
-		student:     student,
-		phoneNumber: phoneNumber,
-		document:    document,
-		user:        user,
+func New(opts Opts) Server {
+	return Server{
+		Opts: opts,
 	}
 }
 
-func (s *Server) Start() error {
-	r := gin.Default()
-	r.Use(gin.Logger(), gin.Recovery())
+func (s Server) Start() error {
+	mux := http.NewServeMux()
 
-	v1Api := r.Group("/api/v1")
-	{
-		v1Api.POST("/login", s.auth)
+	mux.HandleFunc("POST /v1/auth")
 
-		studentGroup := v1Api.Group("/student")
-		{
-			studentGroup.Use(s.authMiddleware(roleStudent))
-			studentGroup.GET("/self", s.GetSelfStudent)
-			studentGroup.PUT("/student", s.UpdateSelfStudent)
-			studentGroup.GET("/applications", s.GetAllApplications)
-			studentGroup.GET("/application/:id", s.GetApplication)
-			studentGroup.POST("/application", s.CreateApplication)
-			studentGroup.PUT("/application/:id", s.UpdateApplication)
-			studentGroup.GET("/document", s.AllDocumentsForStudent)
-			studentGroup.GET("/document/:id", s.GetDocument)
-		}
+	mux.HandleFunc("GET /v1/admin")
+	mux.HandleFunc("PATCH /v1/admin")
+	mux.HandleFunc("GET /v1/admin/worker")
+	mux.HandleFunc("GET /v1/admin/worker/{id}")
+	mux.HandleFunc("POST /v1/admin/worker")
+	mux.HandleFunc("PATCH /v1/admin/worker")
 
-		adminGroup := v1Api.Group("/admin")
-		{
-			adminGroup.Use(s.authMiddleware(roleAdmin))
-			adminGroup.GET("/self", s.GetUserSelfAccount)
-			adminGroup.GET("/worker", s.GetAllWorker)
-			adminGroup.GET("/worker/:id", s.GetWorkerById)
-			adminGroup.POST("/worker", s.AddWorker)
-			adminGroup.POST("/worker/:id", s.UpdateWorker)
-			adminGroup.DELETE("/worker/:id", s.DeleteWorker)
-		}
+	mux.HandleFunc("GET /v1/worker")
+	mux.HandleFunc("GET /v1/worker/student")
+	mux.HandleFunc("GET /v1/worker/student/{id}")
+	mux.HandleFunc("POST /v1//worker/student")
+	mux.HandleFunc("PATCH /v1/worker/student")
+	mux.HandleFunc("GET /v1/worker/application")
+	mux.HandleFunc("GET /v1/worker/application/{userId}")
+	mux.HandleFunc("GET /v1/worker/application/{id}")
+	mux.HandleFunc("PATCH /v1/worker/application/close")
+	mux.HandleFunc("GET /v1/worker/document/download/{userId}")
+	mux.HandleFunc("GET /v1/worker/document/{userId}")
+	mux.HandleFunc("GET /v1/worker/document/{Id}")
+	mux.HandleFunc("POST /v1/worker/document")
+	mux.HandleFunc("PATCH /v1/worker/document}")
 
-		workerGroup := v1Api.Group("/worker")
-		{
-			workerGroup.Use(s.authMiddleware(roleWorker))
-			workerGroup.GET("/self", s.GetUserSelfAccount)
-			workerGroup.GET("/student", s.GetAllStudent)
-			workerGroup.GET("/student/:id", s.GetStudentById)
-			workerGroup.POST("/student", s.AddStudent)
-			workerGroup.POST("/student/:id", s.UpdateStudent)
-			workerGroup.DELETE("/student/:id", s.DeleteStudent)
-			workerGroup.POST("/student/:id/phone", s.AddPhoneNumber)
-			workerGroup.POST("/student/:id/document", s.AddDocument)
-			workerGroup.PATCH("/student/phone", s.UpdatePhoneNumber)
-			workerGroup.DELETE("/student/:id/phone/:phoneId", s.DeletePhoneNumber)
-			workerGroup.DELETE("/student/:id/document/:documentId", s.DeleteDocument)
-			workerGroup.GET("/student/:id/phone", s.GetPhoneNumbers)
-			workerGroup.GET("/student/:id/document", s.GetDocuments)
-			workerGroup.GET("/student/:id/document/:documentId", s.GetDocumentById)
-			workerGroup.GET("/student/:id/application", s.GetApplications)
-			workerGroup.GET("/student/:id/application/:applicationId", s.GetApplicationById)
-			workerGroup.PATCH("/student/:id/application/:applicationId", s.CloseApplication)
-		}
+	mux.HandleFunc("GET /v1/student")
+	mux.HandleFunc("GET /v1/student/docuemnt")
+	mux.HandleFunc("GET /v1/student/application")
+	mux.HandleFunc("PATCH /v1/student/application")
+	mux.HandleFunc("POST /v1/student/application")
+
+	server := http.Server{
+		Addr:        s.Port,
+		IdleTimeout: s.IdleTimeout,
+		Handler:     mux,
 	}
 
-	return r.Run()
+	return server.ListenAndServe()
 }

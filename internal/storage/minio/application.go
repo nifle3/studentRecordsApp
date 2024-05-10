@@ -1,19 +1,83 @@
 package minio
 
-import "context"
+import (
+	"context"
+	"io"
+	"studentRecordsApp/internal/service"
 
-func (s *Storage) GetApplicationFile(link string, ctx context.Context) ([]byte, error) {
-	return s.getFile(documentBucket, link, ctx)
+	"github.com/minio/minio-go/v7"
+)
+
+const applicationBucket = "application"
+
+var _ service.ApplicationFS = (*Application)(nil)
+var _ service.ApplicationFS = &Application{}
+
+type Application struct {
+	client *minio.Client
 }
 
-func (s *Storage) AddApplicationFile(name string, file []byte, ctx context.Context) (string, error) {
-	return s.addFile(documentBucket, name, file, ctx)
+func NewApplication(ctx context.Context, client *minio.Client) *Application {
+	exists, err := client.BucketExists(ctx, applicationBucket)
+	if err != nil {
+		return nil
+	}
+
+	if !exists {
+		err = client.MakeBucket(ctx, applicationBucket, minio.MakeBucketOptions{})
+	}
+
+	return &Application{
+		client: client,
+	}
 }
 
-func (s *Storage) DeleteApplicationFile(link string, ctx context.Context) error {
-	return s.deleteFile(documentBucket, link, ctx)
+func (s *Application) Get(ctx context.Context, link string) ([]byte, error) {
+	object, err := s.client.GetObject(ctx, applicationBucket, link, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	defer object.Close()
+	info, err := object.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]byte, 0, info.Size)
+	for {
+		_, err := object.Read(result)
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return result, nil
 }
 
-func (s *Storage) UpdateApplicationFile(file []byte, link string, ctx context.Context) (string, error) {
-	return s.updateFile(documentBucket, file, link, ctx)
+func (s *Application) Add(ctx context.Context, name string, size int64, file io.Reader) error {
+	_, err := s.client.PutObject(ctx, applicationBucket, name, file, size, minio.PutObjectOptions{
+		ContentType: "application/pdf",
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Application) Delete(ctx context.Context, link string) error {
+	return s.client.RemoveObject(ctx, applicationBucket, link, minio.RemoveObjectOptions{})
+}
+
+func (s *Application) Update(ctx context.Context, file io.Reader, size int64, link string) error {
+	if err := s.Delete(ctx, link); err != nil {
+		return err
+	}
+
+	return s.Add(ctx, link, size, file)
 }

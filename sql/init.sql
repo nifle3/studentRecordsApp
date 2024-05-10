@@ -1,4 +1,3 @@
-
 CREATE TABLE IF NOT EXISTS Users (
     id UUID PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
@@ -26,10 +25,11 @@ CREATE TABLE IF NOT EXISTS Students (
     street VARCHAR(50) NOT NULL,
     house INT NOT NULL,
     apartment INT NOT NULL,
-    enroll_year INT NOT NULL,
-    specialization VARCHAR(100) NOT NULL,
-    enroll_order_number VARCHAR(100) NOT NULL,
+    enroll_year DATE NOT NULL,
     link_photo VARCHAR(100) NULL,
+    specialization VARCHAR(100) NOT NULL,
+    course INT NOT NULL DEFAULT 1,
+    _group INT NOT NULL,
 
     CONSTRAINT student_email_unique UNIQUE (email)
 );
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS Students (
 CREATE TABLE IF NOT EXISTS PhoneNumbers (
     id UUID PRIMARY KEY,
     student_id UUID NOT NULL REFERENCES Students(id),
-    country_code SMALLINT NOT NULL,
+    country_code VARCHAR(3) NOT NULL,
     city_code VARCHAR(10) NOT NULL,
     code VARCHAR(10) NOT NULL,
     description VARCHAR(50) NULL
@@ -46,19 +46,19 @@ CREATE TABLE IF NOT EXISTS PhoneNumbers (
 CREATE TABLE IF NOT EXISTS Applications (
     id UUID PRIMARY KEY,
     student_id UUID REFERENCES Students(id) ON DELETE SET NULL,
-    application_name VARCHAR(50) NOT NULL,
+    _name VARCHAR(50) NOT NULL,
     contact_info VARCHAR(50) NOT NULL,
-    application_text TEXT NOT NULL,
-    application_status VARCHAR(50) NOT NULL,
+    _text TEXT NOT NULL,
+    status VARCHAR(50) NOT NULL,
     created_at DATE NOT NULL,
-    link_to_application VARCHAR(50) NULL
+    link VARCHAR(50) NULL
 );
 
 CREATE TABLE IF NOT EXISTS StudentsDocuments (
     id UUID PRIMARY KEY,
     student_id UUID REFERENCES Students(id) ON DELETE CASCADE,
-    document_name VARCHAR(100) NOT NULL,
-    document_type VARCHAR(100) NOT NULL,
-    document_link_s3 VARCHAR(100) NOT NULL,
+    _name VARCHAR(100) NOT NULL,
+    _type VARCHAR(100) NOT NULL,
+    link VARCHAR(100) NOT NULL,
     created_at DATE NOT NULL
 );

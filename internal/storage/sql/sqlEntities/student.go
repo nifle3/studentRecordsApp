@@ -20,8 +20,9 @@ type Student struct {
 	Street          string    `db:"street"`
 	HouseNumber     int       `db:"house"`
 	ApartmentNumber int       `db:"apartment"`
-	EnrollYear      int       `db:"enroll_year"`
+	EnrollYear      time.Time `db:"enroll_year"`
 	Specialization  string    `db:"specialization"`
-	OrderNumber     string    `db:"enroll_order_number"`
 	LinkPhoto       string    `db:"link_photo"`
+	Group           int       `db:"course"`
+	Course          int       `db:"_course"`
 }

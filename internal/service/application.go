@@ -2,26 +2,34 @@ package service
 
 import (
 	"context"
-	"fmt"
-	"studentRecordsApp/internal/entites"
+	"io"
+	"net/http"
+	"studentRecordsApp/pkg/customError"
 	"time"
+
+	"github.com/google/uuid"
+
+	"studentRecordsApp/internal/service/entites"
 )
 
-type ApplicationDb interface {
-	GetApplications(ctx context.Context) ([]entities.entities, error)
-	GetApplicationForUser(userId string, ctx context.Context) ([]entities.Application, error)
-	GetApplicationById(id string, ctx context.Context) (entities.Application, error)
-	AddApplication(application entities.Application, ctx context.Context) error
-	UpdateApplication(application entities.Application, ctx context.Context) error
-	DeleteApplication(id, userId string, ctx context.Context) error
-}
+type (
+	ApplicationDb interface {
+		GetApplications(ctx context.Context) ([]entities.Application, error)
+		GetApplicationForUser(ctx context.Context, userId uuid.UUID) ([]entities.Application, error)
+		GetApplicationById(ctx context.Context, id uuid.UUID) (entities.Application, error)
+		AddApplication(ctx context.Context, application entities.Application) error
+		UpdateApplication(ctx context.Context, application entities.Application) error
+		UpdateStatusApplication(ctx context.Context, applicationID uuid.UUID, status string) error
+		DeleteApplication(ctx context.Context, id, userId uuid.UUID) error
+	}
 
-type ApplicationFS interface {
-	GetApplicationFile(link string, ctx context.Context) ([]byte, error)
-	AddApplicationFile(name string, file []byte, ctx context.Context) (string, error)
-	DeleteApplicationFile(link string, ctx context.Context) error
-	UpdateApplicationFile(file []byte, link string, ctx context.Context) (string, error)
-}
+	ApplicationFS interface {
+		Get(ctx context.Context, link string) ([]byte, error)
+		Add(ctx context.Context, name string, size int64, file io.Reader) error
+		Delete(ctx context.Context, link string) error
+		Update(ctx context.Context, file io.Reader, size int64, link string) error
+	}
+)
 
 type Application struct {
 	db *ApplicationDb
@@ -39,69 +47,65 @@ func (a *Application) GetAll(ctx context.Context) ([]entities.Application, error
 	return (*a.db).GetApplications(ctx)
 }
 
-func (a *Application) GetAllForUser(userId string, ctx context.Context) ([]entities.Application, error) {
-	return (*a.db).GetApplicationForUser(userId, ctx)
+func (a *Application) GetAllForUser(ctx context.Context, userId uuid.UUID) ([]entities.Application, error) {
+	return (*a.db).GetApplicationForUser(ctx, userId)
 }
 
-func (a *Application) GetById(id string, ctx context.Context) (entities.Application, error) {
-	application, err := (*a.db).GetApplicationById(id, ctx)
+func (a *Application) GetById(ctx context.Context, id uuid.UUID) (entities.Application, error) {
+	application, err := (*a.db).GetApplicationById(ctx, id)
 	if err != nil {
-		return entities.Application{}, fmt.Errorf("500")
+		return entities.Application{}, err
 	}
 
-	application.File, err = (*a.fs).GetApplicationFile(application.Link, ctx)
+	_, err = (*a.fs).Get(ctx, application.Link)
 	if err != nil {
-		return entities.Application{}, fmt.Errorf("500")
+		return entities.Application{}, err
 	}
 
 	return application, nil
 }
 
-func (a *Application) Add(application entities.Application, ctx context.Context) error {
+func (a *Application) Add(ctx context.Context, application entities.Application, size int64) error {
 	if !application.CheckStatus() {
-		return fmt.Errorf("400")
+		return customError.New(http.StatusBadRequest, "Has an invalid status")
 	}
 
 	if !application.CheckIsNotEmpty() {
-		return fmt.Errorf("400")
+		return customError.New(http.StatusBadRequest, "Has an empty field")
 	}
 
+	id := uuid.New()
 	application.CreatedAt = time.Now()
+	application.Link = id.String()
+	application.Id = id
 
-	var err error
-	application.Link, err = (*a.fs).AddApplicationFile(application.Name, application.File, ctx)
-	if err != nil {
+	if err := (*a.fs).Add(ctx, application.Link, size, application.File); err != nil {
 		return err
 	}
 
-	return (*a.db).AddApplication(application, ctx)
+	return (*a.db).AddApplication(ctx, application)
 }
 
-func (a *Application) Update(application entities.Application, ctx context.Context) error {
+func (a *Application) Update(ctx context.Context, application entities.Application) error {
 	if !application.CheckStatus() {
-		return fmt.Errorf("400")
+		return customError.New(http.StatusBadRequest, "Invalid status")
 	}
 
 	if !application.CheckIsNotEmpty() {
-		return fmt.Errorf("400")
+		return customError.New(http.StatusBadRequest, "Has an empty field")
 	}
 
-	application.CreatedAt = time.Now()
-
-	return (*a.db).UpdateApplication(application, ctx)
+	return (*a.db).UpdateApplication(ctx, application)
 }
 
-func (a *Application) Delete(application entities.Application, userId string, ctx context.Context) error {
-	err := (*a.fs).DeleteApplicationFile(application.Link, ctx)
-	if err != nil {
+func (a *Application) Delete(ctx context.Context, applicationID, userId uuid.UUID, link string) error {
+	if err := (*a.db).DeleteApplication(ctx, applicationID, userId); err != nil {
 		return err
 	}
 
-	return (*a.db).DeleteApplication(application.Id, userId, ctx)
+	return (*a.fs).Delete(ctx, link)
 }
 
-func (a *Application) ChangeStatusToFinish(application entities.Application, ctx context.Context) error {
-	application.Status = "Закрыт"
-
-	return (*a.db).UpdateApplication(application, ctx)
+func (a *Application) ChangeStatusToFinish(applicationID uuid.UUID, ctx context.Context) error {
+	return (*a.db).UpdateStatusApplication(ctx, applicationID, entities.ApplicationClosed)
 }

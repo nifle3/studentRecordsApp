@@ -2,117 +2,124 @@ package service
 
 import (
 	"context"
-	"fmt"
-	"studentRecordsApp/internal/entites"
+	"io"
+	"net/http"
+	"studentRecordsApp/pkg/customError"
+
+	"github.com/google/uuid"
+
+	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/pkg/password"
 )
 
-type StudentDb interface {
-	GetStudents(ctx context.Context) ([]entities.entities, error)
-	GetStudent(id string, ctx context.Context) (entities.Student, error)
-	AddStudent(student entities.Student, ctx context.Context) error
-	UpdateStudent(student entities.Student, ctx context.Context) error
-	DeleteStudent(id string, ctx context.Context) error
-	GetStudentByEmail(email string, ctx context.Context) (entities.Student, error)
-}
+type (
+	StudentDB interface {
+		GetStudents(ctx context.Context) ([]entities.Student, error)
+		GetStudent(ctx context.Context, id uuid.UUID) (entities.Student, error)
+		AddStudent(ctx context.Context, student entities.Student) (uuid.UUID, error)
+		UpdateStudent(ctx context.Context, student entities.Student) error
+		DeleteStudent(ctx context.Context, id uuid.UUID) error
+	}
 
-type StudentFS interface {
-	GetPhotoStudentFile(link string, ctx context.Context) ([]byte, error)
-	AddPhotoStudentFile(name string, file []byte, ctx context.Context) (string, error)
-	DeletePhotoStudentFile(link string, ctx context.Context) error
-	UpdatePhotoStudentFile(file []byte, link string, ctx context.Context) (string, error)
-}
+	StudentPhoneDB interface {
+		AddStudentPhone(ctx context.Context, phone entities.PhoneNumber) error
+	}
+
+	StudentFS interface {
+		Get(ctx context.Context, link string) ([]byte, error)
+		Add(ctx context.Context, name string, size int64, file io.Reader) error
+		Delete(ctx context.Context, link string) error
+		Update(ctx context.Context, file io.Reader, size int64, link string) error
+	}
+)
 
 type Student struct {
-	db *StudentDb
-	fs *StudentFS
+	db      *StudentDB
+	phoneDB *StudentPhoneDB
+	fs      *StudentFS
 }
 
-func NewStudent(db StudentDb, fs StudentFS) Student {
+func NewStudent(db *StudentDB, fs *StudentFS, phoneDB *StudentPhoneDB) Student {
 	return Student{
-		db: &db,
-		fs: &fs,
+		db:      db,
+		fs:      fs,
+		phoneDB: phoneDB,
 	}
 }
 
-func (s Student) Add(student entities.Student, ctx context.Context) error {
+func (s Student) Add(ctx context.Context, student entities.Student, size int64) error {
 	if !s.checkCorrectStudent(student, ctx) {
-		return fmt.Errorf("400")
+		return customError.New(http.StatusBadRequest, "Has some invalid fields")
 	}
+
+	id := uuid.New()
+	student.Id = id
+	student.LinkPhoto = id.String()
 
 	var err error
 	student.Password, err = password.Hash(student.Password)
 	if err != nil {
-		return fmt.Errorf("500")
+		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
-	student.LinkPhoto, err = (*s.fs).AddPhotoStudentFile(student.GetFullName(), student.Photo, ctx)
-	if err != nil {
-		return fmt.Errorf("500")
+	if err := (*s.fs).Add(ctx, student.LinkPhoto, size, student.Photo); err != nil {
+		return err
 	}
 
-	err = (*s.db).AddStudent(student, ctx)
+	_, err = (*s.db).AddStudent(ctx, student)
 	if err != nil {
-		return fmt.Errorf("500")
+		return err
+	}
+
+	for _, value := range student.PhoneNumbers {
+		value.StudentId = id
+		value.Id = uuid.New()
+
+		if err := value.CheckCorrectNumber(); err != nil {
+			return customError.New(http.StatusBadRequest, "Has an invalid phone number")
+		}
+
+		if err := (*s.phoneDB).AddStudentPhone(ctx, value); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func (s Student) Update(student entities.Student, ctx context.Context) error {
+func (s Student) Update(ctx context.Context, student entities.Student, size int64) error {
 	if !s.checkCorrectStudent(student, ctx) {
-		return fmt.Errorf("400")
+		return customError.New(http.StatusBadRequest, "Has some invalid fields")
 	}
 
-	var err error
-	student.LinkPhoto, err = (*s.fs).UpdatePhotoStudentFile(student.Photo, student.GetFullName(), ctx)
-	if err != nil {
-		return fmt.Errorf("500")
+	if err := (*s.fs).Update(ctx, student.Photo, size, student.LinkPhoto); err != nil {
+		return err
 	}
 
-	err = (*s.db).UpdateStudent(student, ctx)
-	if err != nil {
-		return fmt.Errorf("500")
-	}
-
-	return nil
+	return (*s.db).UpdateStudent(ctx, student)
 }
 
 func (s Student) checkCorrectStudent(student entities.Student, _ context.Context) bool {
-	emailResult, err := student.CheckEmail()
-	if err != nil {
-		return false
-	}
-
 	return student.CheckIsNotEmpty() && student.CheckNumber() && student.CheckPassportSeria() &&
-		student.CheckBirthdate() && emailResult &&
+		student.CheckBirthdate() &&
 		student.CheckPassword()
 }
 
-func (s Student) Delete(id string, ctx context.Context) error {
-	return (*s.db).DeleteStudent(id, ctx)
+func (s Student) Delete(ctx context.Context, id uuid.UUID) error {
+	return (*s.db).DeleteStudent(ctx, id)
 }
 
-func (s Student) Get(id string, ctx context.Context) (entities.Student, error) {
-	student, err := (*s.db).GetStudent(id, ctx)
+func (s Student) Get(ctx context.Context, id uuid.UUID) (entities.Student, error) {
+	student, err := (*s.db).GetStudent(ctx, id)
 	if err != nil {
 		return entities.Student{}, err
 	}
 
-	student.Photo, err = (*s.fs).GetPhotoStudentFile(student.LinkPhoto, ctx)
+	_, err = (*s.fs).Get(ctx, student.LinkPhoto)
 
 	return student, err
 }
 
 func (s Student) GetAll(ctx context.Context) ([]entities.Student, error) {
 	return (*s.db).GetStudents(ctx)
-}
-
-func (s Student) Login(email, pass string, ctx context.Context) (entities.Student, error) {
-	result, err := (*s.db).GetStudentByEmail(email, ctx)
-	if err != nil {
-		return entities.Student{}, err
-	}
-
-	return result, password.CheckHash(pass, []byte(result.Password))
 }

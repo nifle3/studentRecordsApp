@@ -2,12 +2,16 @@ package service
 
 import (
 	"context"
-	"fmt"
-	"studentRecordsApp/internal/entites"
+	"net/http"
+	"studentRecordsApp/pkg/customError"
+
+	"github.com/google/uuid"
+
+	"studentRecordsApp/internal/service/entites"
 )
 
 type PhoneNumberDb interface {
-	GetPhoneNumbers(userId string, ctx context.Context) ([]entities.entities, error)
+	GetPhoneNumbers(userId string, ctx context.Context) ([]entities.PhoneNumber, error)
 	AddPhoneNumber(number entities.PhoneNumber, ctx context.Context) error
 	UpdatePhoneNumber(number entities.PhoneNumber, ctx context.Context) error
 	DeletePhoneNumber(id, studentId string, ctx context.Context) error
@@ -29,33 +33,25 @@ func (p *PhoneNumber) GetAllForUser(userId string, ctx context.Context) ([]entit
 
 func (p *PhoneNumber) Add(number entities.PhoneNumber, ctx context.Context) error {
 	if !number.CheckIsNotEmpty() {
-		return fmt.Errorf("400")
+		return customError.New(http.StatusBadRequest, "Has an empty field")
 	}
 
-	result, err := number.CheckCorrectNumber()
-	if err != nil {
-		return err
+	if err := number.CheckCorrectNumber(); err != nil {
+		return customError.New(http.StatusBadRequest, "Has an invalid number")
 	}
 
-	if !result {
-		return fmt.Errorf("400")
-	}
+	number.Id = uuid.New()
 
 	return (*p.db).AddPhoneNumber(number, ctx)
 }
 
 func (p *PhoneNumber) Update(number entities.PhoneNumber, ctx context.Context) error {
 	if !number.CheckIsNotEmpty() {
-		return fmt.Errorf("400")
+		return customError.New(http.StatusBadRequest, "Has an empty field")
 	}
 
-	result, err := number.CheckCorrectNumber()
-	if err != nil {
-		return err
-	}
-
-	if !result {
-		return fmt.Errorf("400")
+	if err := number.CheckCorrectNumber(); err != nil {
+		return customError.New(http.StatusBadRequest, "Has an invalid number")
 	}
 
 	return (*p.db).UpdatePhoneNumber(number, ctx)

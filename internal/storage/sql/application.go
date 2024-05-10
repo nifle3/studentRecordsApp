@@ -2,95 +2,98 @@ package sql
 
 import (
 	"context"
-	"studentRecordsApp/internal/entites"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 
 	"studentRecordsApp/internal/casts"
+	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 )
 
-func (s *Storage) GetApplications(ctx context.Context) ([]entities.entities, error) {
-	results := make([]sqlEntities.Application, 0)
-	err := s.db.SelectContext(ctx, &results, "SELECT * FROM Applications ORDER BY created_at")
-	if err != nil {
-		return nil, err
-	}
-
-	resultsEntitie := make([]entities.Application, 0, len(results))
-	for _, value := range results {
-		resultsEntitie = append(resultsEntitie, casts.ApplicationSqlToService(value, ctx))
-	}
-
-	return resultsEntitie, nil
+type Application struct {
+	db *sqlx.DB
 }
 
-func (s *Storage) GetApplicationForUser(userId string, ctx context.Context) ([]entities.Application, error) {
-	rows, err := s.db.QueryContext(ctx, "SELECT * FROM Applications WHERE id =$1 ORDER BY created_at", userId)
+func NewApplication(db *sqlx.DB) Application {
+	return Application{
+		db: db,
+	}
+}
+
+func (a *Application) Get(ctx context.Context) ([]entities.Application, error) {
+	var sqlResults []sqlEntities.Application
+	err := a.db.SelectContext(ctx, &sqlResults, "SELECT * FROM Applications ORDER BY created_at")
 	if err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
-
-	results := make([]entities.Application, 0)
-
-	for rows.Next() {
-		var app sqlEntities.Application
-		err := rows.Scan(&app)
-		if err != nil {
-			return nil, err
-		}
-
-		results = append(results, casts.ApplicationSqlToService(app, ctx))
+	results := make([]entities.Application, 0, len(sqlResults))
+	for idx := range sqlResults {
+		results = append(results, casts.ApplicationSqlToService(ctx, sqlResults[idx]))
 	}
 
 	return results, nil
 }
 
-func (s *Storage) GetApplicationById(id string, ctx context.Context) (entities.Application, error) {
-	var app sqlEntities.Application
+func (a *Application) GetByUserId(ctx context.Context, userId uuid.UUID) ([]entities.Application, error) {
+	var result []sqlEntities.Application
+	err := a.db.SelectContext(ctx, &result, "SELECT * FROM Applications WHERE student_id = $1 ORDER BY created_at",
+		userId)
+	if err != nil {
+		return nil, err
+	}
 
-	err := s.db.GetContext(ctx, &app, "SELECT * FROM Applications WHERE id =$1;", id)
+	results := make([]entities.Application, 0, len(result))
+	for idx := range result {
+		results = append(results, casts.ApplicationSqlToService(ctx, result[idx]))
+	}
+
+	return results, nil
+}
+
+func (a *Application) GetById(ctx context.Context, id, userID uuid.UUID) (entities.Application, error) {
+	var result sqlEntities.Application
+	err := a.db.GetContext(ctx, &result, "SELECT * FROM Applications WHERE id = $1 AND student_id = $2",
+		id, userID)
 	if err != nil {
 		return entities.Application{}, err
 	}
 
-	return casts.ApplicationSqlToService(app, ctx), nil
+	return casts.ApplicationSqlToService(ctx, result), nil
 }
 
-func (s *Storage) AddApplication(application entities.Application, ctx context.Context) error {
-	sqlApplication, err := casts.ApplicationServiceToSqlWithOutId(application, ctx)
-	if err != nil {
-		return err
+func (a *Application) Add(ctx context.Context, app entities.Application) error {
+	tx, isOk := ctx.Value("tx").(*sqlx.Tx)
+	if !isOk {
+		return errors.New("tx is not set")
 	}
 
-	sqlApplication.Id = uuid.New()
-
-	_, err = s.db.ExecContext(ctx, `
-        INSERT INTO Applications (id, student_id, contact_info, application_text, application_status, created_at) 
-        VALUES ($1, $2, $3, $4, $5, $6);`,
-		sqlApplication.Id, sqlApplication.StudentId, sqlApplication.Text, sqlApplication.Status, sqlApplication.CreatedAt)
+	_, err := (*tx).ExecContext(ctx, `INSERT INTO Applications (id, student_id, application_name, 
+                          contact_info, application_text, application_status, created_at, link_to_application) 
+    										VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		app.Id, app.StudentId, app.Name, app.ContactInfo, app.Text, app.Status, app.CreatedAt, app.Link)
 
 	return err
 }
 
-func (s *Storage) UpdateApplication(application entities.Application, ctx context.Context) error {
-	sqlApplication, err := casts.ApplicationServiceToSql(application, ctx)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.db.ExecContext(ctx, `
-        UPDATE Applications SET student_id =$1, contact_info =$2, application_text =$3, application_status =$4, created_at =$5
-        WHERE id =$6;`,
-		sqlApplication.StudentId, sqlApplication.Text, sqlApplication.Status, sqlApplication.CreatedAt, sqlApplication.Id)
+func (a *Application) Update(ctx context.Context, app entities.Application) error {
+	_, err := a.db.ExecContext(ctx, "UPDATE Applications SET application_name = $1, contact_info = $2, application_text = $3 WHERE id = $4",
+		app.Name, app.ContactInfo, app.Text, app.Id)
 
 	return err
 }
 
-func (s *Storage) DeleteApplication(id, userId string, ctx context.Context) error {
-	_, err := s.db.ExecContext(ctx, "DELETE FROM Applications WHERE id =$1 AND student_id =$2;", id, userId)
+func (a *Application) SetClose(ctx context.Context, id uuid.UUID) error {
+	_, err := a.db.ExecContext(ctx, `UPDATE Applications SET application_status = $1 WHERE id = $2`,
+		entities.ApplicationClosed, id)
+
+	return err
+}
+
+func (a *Application) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := a.db.ExecContext(ctx, "DELETE FROM Applications WHERE id = $1", id)
 
 	return err
 }

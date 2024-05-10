@@ -1,19 +1,83 @@
 package minio
 
-import "context"
+import (
+	"context"
+	"io"
+	"studentRecordsApp/internal/service"
 
-func (s *Storage) GetPhotoStudentFile(link string, ctx context.Context) ([]byte, error) {
-	return s.getFile(studentPhotoBucket, link, ctx)
+	"github.com/minio/minio-go/v7"
+)
+
+const studentPhotoBucket = "student_photo"
+
+var _ service.StudentFS = (*StudentPhoto)(nil)
+var _ service.StudentFS = &StudentPhoto{}
+
+type StudentPhoto struct {
+	client *minio.Client
 }
 
-func (s *Storage) AddPhotoStudentFile(name string, file []byte, ctx context.Context) (string, error) {
-	return s.addFile(studentPhotoBucket, name, file, ctx)
+func NewStudentPhoto(ctx context.Context, client *minio.Client) *StudentPhoto {
+	exists, err := client.BucketExists(ctx, studentPhotoBucket)
+	if err != nil {
+		return nil
+	}
+
+	if !exists {
+		err = client.MakeBucket(ctx, studentPhotoBucket, minio.MakeBucketOptions{})
+	}
+
+	return &StudentPhoto{
+		client: client,
+	}
 }
 
-func (s *Storage) DeletePhotoStudentFile(link string, ctx context.Context) error {
-	return s.deleteFile(studentPhotoBucket, link, ctx)
+func (s *StudentPhoto) Get(ctx context.Context, link string) ([]byte, error) {
+	object, err := s.client.GetObject(ctx, studentPhotoBucket, link, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	defer object.Close()
+	info, err := object.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]byte, 0, info.Size)
+	for {
+		_, err := object.Read(result)
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return result, nil
 }
 
-func (s *Storage) UpdatePhotoStudentFile(file []byte, link string, ctx context.Context) (string, error) {
-	return s.updateFile(studentPhotoBucket, file, link, ctx)
+func (s *StudentPhoto) Add(ctx context.Context, name string, size int64, file io.Reader) error {
+	_, err := s.client.PutObject(ctx, studentPhotoBucket, name, file, size, minio.PutObjectOptions{
+		ContentType: "image/jpeg",
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *StudentPhoto) Delete(ctx context.Context, link string) error {
+	return s.client.RemoveObject(ctx, studentPhotoBucket, link, minio.RemoveObjectOptions{})
+}
+
+func (s *StudentPhoto) Update(ctx context.Context, file io.Reader, size int64, link string) error {
+	if err := s.Delete(ctx, link); err != nil {
+		return err
+	}
+
+	return s.Add(ctx, link, size, file)
 }

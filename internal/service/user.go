@@ -2,18 +2,21 @@ package service
 
 import (
 	"context"
-	"fmt"
-	"studentRecordsApp/internal/entites"
+	"net/http"
+	"studentRecordsApp/pkg/customError"
+
+	"github.com/google/uuid"
+
+	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/pkg/password"
 )
 
 type UserDb interface {
-	AddUser(user entities.entities, ctx context.Context) error
-	UpdateUser(user entities.User, ctx context.Context) error
-	GetUserByEmailAndRole(email, role string, ctx context.Context) (entities.User, error)
-	GetUser(id string, ctx context.Context) (entities.User, error)
+	AddUser(user entities.User, ctx context.Context) error
+	UpdateUser(ctx context.Context, user entities.User) error
+	GetUser(ctx context.Context, id uuid.UUID) (entities.User, error)
 	GetUsers(ctx context.Context) ([]entities.User, error)
-	DeleteUser(id string, ctx context.Context) error
+	DeleteUser(ctx context.Context, id uuid.UUID) error
 }
 
 type User struct {
@@ -26,49 +29,46 @@ func NewUser(db UserDb) User {
 	}
 }
 
-func (u User) Add(user entities.User, ctx context.Context) error {
+func (u User) Add(ctx context.Context, user entities.User) error {
 	if !user.IsNotEmpty() {
-		return fmt.Errorf("400")
+		return customError.New(http.StatusBadRequest, "Has some invalid fields")
 	}
 
 	if !user.IsRoleCorrect() {
-		return fmt.Errorf("400")
+		return customError.New(http.StatusBadRequest, "Has an invalid role")
 	}
+
+	user.Id = uuid.New()
 
 	var err error
 	user.Password, err = password.Hash(user.Password)
 	if err != nil {
-		return err
+		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
 	return (u.db).AddUser(user, ctx)
 }
 
-func (u User) Update(user entities.User, ctx context.Context) error {
+func (u User) Update(ctx context.Context, user entities.User) error {
 	if !user.IsNotEmpty() {
-		return fmt.Errorf("400")
+		return customError.New(http.StatusBadRequest, "Has some invalid fields")
 	}
 
-	return (u.db).UpdateUser(user, ctx)
-}
-
-func (u User) Login(pass, login, role string, ctx context.Context) (entities.User, error) {
-	result, err := (u.db).GetUserByEmailAndRole(login, role, ctx)
-	if err != nil {
-		return entities.User{}, err
+	if !user.IsRoleCorrect() {
+		return customError.New(http.StatusBadRequest, "Has an invalid role")
 	}
 
-	return result, password.CheckHash(pass, []byte(result.Password))
+	return (u.db).UpdateUser(ctx, user)
 }
 
-func (u User) Get(userId string, ctx context.Context) (entities.User, error) {
-	return (u.db).GetUser(userId, ctx)
+func (u User) Get(ctx context.Context, userId uuid.UUID) (entities.User, error) {
+	return (u.db).GetUser(ctx, userId)
 }
 
 func (u User) GetAllWorker(ctx context.Context) ([]entities.User, error) {
 	return (u.db).GetUsers(ctx)
 }
 
-func (u User) Delete(userId string, ctx context.Context) error {
-	return (u.db).DeleteUser(userId, ctx)
+func (u User) Delete(ctx context.Context, userId uuid.UUID) error {
+	return (u.db).DeleteUser(ctx, userId)
 }

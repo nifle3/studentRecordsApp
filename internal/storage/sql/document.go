@@ -2,98 +2,68 @@ package sql
 
 import (
 	"context"
-	"studentRecordsApp/internal/entites"
-
-	"github.com/google/uuid"
-
 	"studentRecordsApp/internal/casts"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
+
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+
+	"studentRecordsApp/internal/service/entites"
 )
 
-func (s *Storage) GetStudentsDocumentById(id string, userId string, ctx context.Context) (entities.entities, error) {
-	uuId, err := uuid.Parse(id)
-	if err != nil {
-		return entities.Document{}, err
-	}
+type Document struct {
+	db *sqlx.DB
+}
 
-	uuUserId, err := uuid.Parse(userId)
-	if err != nil {
-		return entities.Document{}, err
+func NewDocument(db *sqlx.DB) *Document {
+	return &Document{
+		db: db,
 	}
+}
 
+func (d *Document) GetById(ctx context.Context, id uuid.UUID) (entities.Document, error) {
 	var result sqlEntities.StudentsDocument
-
-	err = s.db.GetContext(ctx, &result,
-		`SELECT * FROM StudentsDocuments WHERE id = $1 AND student_id = $2;`, uuUserId, uuId)
-
+	err := d.db.SelectContext(ctx, &result, `SELECT * FROM StudentsDocuments WHERE id = $1`, id)
 	if err != nil {
 		return entities.Document{}, err
 	}
 
-	return casts.DocumentSqlToEntite(result, ctx), nil
+	return casts.DocumentSqlToEntite(ctx, result), nil
 }
 
-func (s *Storage) GetStudentsDocumentsForUser(userId string, ctx context.Context) ([]entities.Document, error) {
-	uuUserId, err := uuid.Parse(userId)
+func (d *Document) GetByUserId(ctx context.Context, userId uuid.UUID) ([]entities.Document, error) {
+	var sqlResults []sqlEntities.StudentsDocument
+	err := d.db.SelectContext(ctx, &sqlResults, `SELECT * FROM StudentsDocuments WHERE student_id = $1`, userId)
 	if err != nil {
 		return nil, err
 	}
 
-	sqlResults := make([]sqlEntities.StudentsDocument, 0)
-	err = s.db.SelectContext(ctx, &sqlResults, `SELECT * FROM StudentsDocuments WHERE student_id = $1;`, uuUserId)
-	if err != nil {
-		return nil, err
+	documents := make([]entities.Document, 0, len(sqlResults))
+	for idx := range sqlResults {
+		documents = append(documents, casts.DocumentSqlToEntite(ctx, sqlResults[idx]))
 	}
 
-	results := make([]entities.Document, 0, len(sqlResults))
-	for _, result := range sqlResults {
-		results = append(results, casts.DocumentSqlToEntite(result, ctx))
-	}
-
-	return results, nil
+	return documents, nil
 }
 
-func (s *Storage) AddStudentsDocument(document entities.Document, ctx context.Context) error {
-	sqlDocument, err := casts.DocumentEntiteToSqlWithoutId(document, ctx)
-	if err != nil {
-		return err
-	}
-
-	sqlDocument.Id = uuid.New()
-	_, err = s.db.ExecContext(ctx,
-		`INSERT INTO StudentsDocuments (id, student_id, document_name, document_type, document_link_s3, created_at) 
-				VALUES ($1,$2,$3,$4,$5, $6);`,
-		sqlDocument.Id, sqlDocument.StudentId, sqlDocument.Name, sqlDocument.Type, sqlDocument.Link, sqlDocument.CreatedAt)
-
+func (d *Document) Add(ctx context.Context, document entities.Document) error {
+	_, err := d.db.ExecContext(ctx, `INSERT INTO StudentsDocuments (id, student_id, document_name, document_type, document_link_s3) 
+				VALUES ($1, $2, $3, $4, $5)`, document.Id, document.StudentId, document.Name, document.Type, document.Link)
 	return err
 }
 
-func (s *Storage) DeleteStudentsDocument(id string, userId string, ctx context.Context) error {
-	uuId, err := uuid.Parse(id)
-	if err != nil {
-		return err
-	}
-
-	uuUserId, err := uuid.Parse(userId)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.db.ExecContext(ctx,
-		`DELETE FROM StudentsDocuments WHERE id = $1 AND student_id = $2;`, uuId, uuUserId)
-
+func (d *Document) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := d.db.ExecContext(ctx, `DELETE FROM StudentsDocuments WHERE id = $1`, id)
 	return err
 }
 
-func (s *Storage) UpdateStudentsDocument(document entities.Document, ctx context.Context) error {
-	sqlDocument, err := casts.DocumentEntiteToSql(document, ctx)
-	if err != nil {
-		return err
-	}
+func (d *Document) DeleteWithUserId(ctx context.Context, id, userId uuid.UUID) error {
+	_, err := d.db.ExecContext(ctx, `DELETE FROM StudentsDocuments WHERE id = $1 AND student_id = $2`, id, userId)
+	return err
+}
 
-	_, err = s.db.ExecContext(ctx,
-		`UPDATE StudentsDocuments SET document_name =$1, document_type =$2, document_link_s3 =$3 WHERE id =$4 AND student_id = $5;`,
-		sqlDocument.Name, sqlDocument.Type, sqlDocument.Link, sqlDocument.Id, sqlDocument.StudentId)
-
+func (d *Document) Update(ctx context.Context, document entities.Document) error {
+	_, err := d.db.ExecContext(ctx, `UPDATE StudentsDocuments SET document_name = $1, document_type = $2, document_link_s3 = $3 
+                         WHERE id = $4`, document.Name, document.Type, document.Link, document.Id)
 	return err
 }
