@@ -15,7 +15,13 @@ type Student struct {
 	db *sqlx.DB
 }
 
-func (s *Student) GetStudents(ctx context.Context) ([]entities.Student, error) {
+func NewStudent(db *sqlx.DB) *Student {
+	return &Student{
+		db: db,
+	}
+}
+
+func (s *Student) GetAll(ctx context.Context) ([]entities.Student, error) {
 	result := make([]sqlEntities.Student, 0)
 	err := s.db.SelectContext(ctx, &result, `SELECT * FROM Users;`)
 	if err != nil {
@@ -31,7 +37,7 @@ func (s *Student) GetStudents(ctx context.Context) ([]entities.Student, error) {
 	return results, nil
 }
 
-func (s *Student) GetStudent(ctx context.Context, id uuid.UUID) (entities.Student, error) {
+func (s *Student) Get(ctx context.Context, id uuid.UUID) (entities.Student, error) {
 	var result sqlEntities.Student
 	err := s.db.GetContext(ctx, &result, `SELECT * FROM Students WHERE id = $1 LIMIT 1;`, id)
 	if err != nil {
@@ -41,24 +47,24 @@ func (s *Student) GetStudent(ctx context.Context, id uuid.UUID) (entities.Studen
 	return casts.StudentSqlToEntitie(ctx, result), nil
 }
 
-func (s *Student) AddStudent(ctx context.Context, student entities.Student) error {
+func (s *Student) Add(ctx context.Context, student entities.Student) error {
 	sqlStudent := casts.StudentEntiteToSql(ctx, student)
-	var id uuid.UUID
-	err := s.db.GetContext(ctx, &id,
+	_, err := s.db.ExecContext(ctx,
 		`INSERT INTO Students (id, first_name, last_name, surname, passport_seria, passport_number,
                     birth_date, email, password, country, city, street, house, apartment, enroll_year, 
-                    specialization, enroll_order_number) 
+                    specialization, link_photo, course, _group) 
                     VALUES(
-                            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$13,$14,$15,$16
-                   ) RETURNING id;`, sqlStudent.Id, sqlStudent.FirstName, sqlStudent.LastName, sqlStudent.Surname,
+                            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$13,$14,$15,$16, $17, $18
+                   );`, sqlStudent.Id, sqlStudent.FirstName, sqlStudent.LastName, sqlStudent.Surname,
 		sqlStudent.PassportSeria, sqlStudent.PassportNumber, sqlStudent.BirthDate, sqlStudent.Email,
 		sqlStudent.Password, sqlStudent.Country, sqlStudent.City, sqlStudent.Street,
-		sqlStudent.HouseNumber, sqlStudent.ApartmentNumber, sqlStudent.EnrollYear, sqlStudent.Specialization)
+		sqlStudent.HouseNumber, sqlStudent.ApartmentNumber, sqlStudent.EnrollYear, sqlStudent.Specialization,
+		sqlStudent.LinkPhoto, sqlStudent.Course, sqlStudent.Group)
 
 	return err
 }
 
-func (s *Student) UpdateStudent(ctx context.Context, student entities.Student) error {
+func (s *Student) Update(ctx context.Context, student entities.Student) error {
 	sqlStudent := casts.StudentEntiteToSql(ctx, student)
 
 	_, err := s.db.ExecContext(ctx,
@@ -73,16 +79,16 @@ func (s *Student) UpdateStudent(ctx context.Context, student entities.Student) e
 	return err
 }
 
-func (s *Student) DeleteStudent(ctx context.Context, id uuid.UUID) error {
+func (s *Student) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := s.db.ExecContext(ctx, `DELETE FROM Students WHERE id =$1;`, id)
 
 	return err
 }
 
-func (s *Student) GetStudentByEmail(ctx context.Context, email string) (entities.Student, error) {
+func (s *Student) Auth(ctx context.Context, email string) (uuid.UUID, string, error) {
 	var student sqlEntities.Student
 
 	err := s.db.GetContext(ctx, &student, `SELECT * FROM Students WHERE email =$1;`, email)
 
-	return casts.StudentSqlToEntitie(ctx, student), err
+	return student.Id, student.Password, err
 }

@@ -2,6 +2,7 @@ package sql
 
 import (
 	"context"
+	"studentRecordsApp/internal/service"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -11,16 +12,19 @@ import (
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 )
 
+var _ service.StudentPhoneDB = (*Phone)(nil)
+
 type Phone struct {
 	db *sqlx.DB
 }
 
-func New(db *sqlx.DB) Phone {
-	return Phone{
+func NewPhone(db *sqlx.DB) *Phone {
+	return &Phone{
 		db: db,
 	}
 }
-func (p *Phone) GetByUserId(ctx context.Context, userId uuid.UUID) ([]entities.PhoneNumber, error) {
+
+func (p *Phone) GetForUser(ctx context.Context, userId uuid.UUID) ([]entities.PhoneNumber, error) {
 	var sqlResults []sqlEntities.PhoneNumber
 	err := p.db.SelectContext(ctx, &sqlResults, "SELECT * FROM PhoneNumbers WHERE student_id = $1", userId)
 	if err != nil {

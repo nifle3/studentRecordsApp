@@ -14,15 +14,16 @@ import (
 
 type (
 	StudentDB interface {
-		GetStudents(ctx context.Context) ([]entities.Student, error)
-		GetStudent(ctx context.Context, id uuid.UUID) (entities.Student, error)
-		AddStudent(ctx context.Context, student entities.Student) (uuid.UUID, error)
-		UpdateStudent(ctx context.Context, student entities.Student) error
-		DeleteStudent(ctx context.Context, id uuid.UUID) error
+		GetAll(ctx context.Context) ([]entities.Student, error)
+		Get(ctx context.Context, id uuid.UUID) (entities.Student, error)
+		Add(ctx context.Context, student entities.Student) error
+		Update(ctx context.Context, student entities.Student) error
+		Delete(ctx context.Context, id uuid.UUID) error
 	}
 
 	StudentPhoneDB interface {
-		AddStudentPhone(ctx context.Context, phone entities.PhoneNumber) error
+		Add(ctx context.Context, phone entities.PhoneNumber) error
+		GetForUser(ctx context.Context, id uuid.UUID) ([]entities.PhoneNumber, error)
 	}
 
 	StudentFS interface {
@@ -34,12 +35,12 @@ type (
 )
 
 type Student struct {
-	db      *StudentDB
-	phoneDB *StudentPhoneDB
-	fs      *StudentFS
+	db      StudentDB
+	phoneDB StudentPhoneDB
+	fs      StudentFS
 }
 
-func NewStudent(db *StudentDB, fs *StudentFS, phoneDB *StudentPhoneDB) Student {
+func NewStudent(db StudentDB, fs StudentFS, phoneDB StudentPhoneDB) Student {
 	return Student{
 		db:      db,
 		fs:      fs,
@@ -47,7 +48,7 @@ func NewStudent(db *StudentDB, fs *StudentFS, phoneDB *StudentPhoneDB) Student {
 	}
 }
 
-func (s Student) Add(ctx context.Context, student entities.Student, size int64) error {
+func (s Student) Add(ctx context.Context, student entities.Student, size int64) *customError.Http {
 	if !s.checkCorrectStudent(student, ctx) {
 		return customError.New(http.StatusBadRequest, "Has some invalid fields")
 	}
@@ -62,13 +63,13 @@ func (s Student) Add(ctx context.Context, student entities.Student, size int64) 
 		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
-	if err := (*s.fs).Add(ctx, student.LinkPhoto, size, student.Photo); err != nil {
-		return err
+	if err := s.fs.Add(ctx, student.LinkPhoto, size, student.Photo); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
-	_, err = (*s.db).AddStudent(ctx, student)
+	err = s.db.Add(ctx, student)
 	if err != nil {
-		return err
+		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
 	for _, value := range student.PhoneNumbers {
@@ -79,24 +80,28 @@ func (s Student) Add(ctx context.Context, student entities.Student, size int64) 
 			return customError.New(http.StatusBadRequest, "Has an invalid phone number")
 		}
 
-		if err := (*s.phoneDB).AddStudentPhone(ctx, value); err != nil {
-			return err
+		if err := s.phoneDB.Add(ctx, value); err != nil {
+			return customError.New(http.StatusInternalServerError, err.Error())
 		}
 	}
 
 	return nil
 }
 
-func (s Student) Update(ctx context.Context, student entities.Student, size int64) error {
+func (s Student) Update(ctx context.Context, student entities.Student, size int64) *customError.Http {
 	if !s.checkCorrectStudent(student, ctx) {
 		return customError.New(http.StatusBadRequest, "Has some invalid fields")
 	}
 
-	if err := (*s.fs).Update(ctx, student.Photo, size, student.LinkPhoto); err != nil {
-		return err
+	if err := s.fs.Update(ctx, student.Photo, size, student.LinkPhoto); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
-	return (*s.db).UpdateStudent(ctx, student)
+	if err := s.db.Update(ctx, student); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
 }
 
 func (s Student) checkCorrectStudent(student entities.Student, _ context.Context) bool {
@@ -105,21 +110,42 @@ func (s Student) checkCorrectStudent(student entities.Student, _ context.Context
 		student.CheckPassword()
 }
 
-func (s Student) Delete(ctx context.Context, id uuid.UUID) error {
-	return (*s.db).DeleteStudent(ctx, id)
-}
-
-func (s Student) Get(ctx context.Context, id uuid.UUID) (entities.Student, error) {
-	student, err := (*s.db).GetStudent(ctx, id)
-	if err != nil {
-		return entities.Student{}, err
+func (s Student) Delete(ctx context.Context, id uuid.UUID, link string) *customError.Http {
+	if err := s.db.Delete(ctx, id); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
-	_, err = (*s.fs).Get(ctx, student.LinkPhoto)
+	if err := s.fs.Delete(ctx, link); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
+	}
 
-	return student, err
+	return nil
 }
 
-func (s Student) GetAll(ctx context.Context) ([]entities.Student, error) {
-	return (*s.db).GetStudents(ctx)
+func (s Student) Get(ctx context.Context, id uuid.UUID) (entities.Student, *customError.Http) {
+	student, err := s.db.Get(ctx, id)
+	if err != nil {
+		return entities.Student{}, customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	student.PhoneNumbers, err = s.phoneDB.GetForUser(ctx, id)
+	if err != nil {
+		return entities.Student{}, customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return student, nil
+}
+
+// TODO: add get image
+func (s Student) GetImage(ctx context.Context, link string) (io.Reader, *customError.Http) {
+	return nil, nil
+}
+
+func (s Student) GetAll(ctx context.Context) ([]entities.Student, *customError.Http) {
+	result, err := s.db.GetAll(ctx)
+	if err != nil {
+		return nil, customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return result, nil
 }

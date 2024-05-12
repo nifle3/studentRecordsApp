@@ -18,35 +18,36 @@ func GetConfig() Config {
 }
 
 type Config struct {
-	DbConfig
-	FsConfig
-	ServerConfig
-}
-
-type DbConfig struct {
-	DbUser     string `env:"DB_USER" envDefault:"user"`
-	DbPassword string `env:"DB_PASSWORD" envDefault:"<password>"`
-	DbHost     string `env:"DB_HOST" envDefault:"localhost"`
-	DbPort     string `env:"DB_PORT" envDefault:"8080"`
-	DbName     string `env:"DB_NAME" envDefault:"student_records"`
-	DbSSLMode  string `env:"DB_SSL" envDefault:"disable"`
-}
-
-type FsConfig struct {
-	FsEndPoint string `env:"FS_END_POINT" envDefault:"9000"`
-	FsUser     string `env:"FS_USER" envDefault:"user"`
-	FsPassword string `env:"FS_PASSWORD" envDefault:"password"`
-}
-
-type ServerConfig struct {
+	DbUser       string `env:"DB_USER" envDefault:"user"`
+	DbPassword   string `env:"DB_PASSWORD" envDefault:"<password>"`
+	DbHost       string `env:"DB_HOST" envDefault:"localhost"`
+	DbPort       string `env:"DB_PORT" envDefault:"8080"`
+	DbName       string `env:"DB_NAME" envDefault:"student_records"`
+	DbSSLMode    string `env:"DB_SSL" envDefault:"disable"`
+	FsEndPoint   string `env:"FS_END_POINT" envDefault:"9000"`
+	FsUser       string `env:"FS_USER" envDefault:"user"`
+	FsPassword   string `env:"FS_PASSWORD" envDefault:"password"`
 	ServerPort   string `env:"SERVER_PORT" envDefault:"8080"`
 	ServerHost   string `env:"SERVER_HOST" envDefault:"localhost"`
 	JwtSecretKey string `env:"JWT_SECRET_KEY" envDefault:"mysecretkey"`
 }
 
+type DbConfig struct {
+}
+
+type FsConfig struct {
+}
+
+type ServerConfig struct {
+}
+
 func (c Config) GetDbConnectionString() string {
-	return fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v",
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		c.DbUser, c.DbPassword, c.DbHost, c.DbPort, c.DbName, c.DbSSLMode)
+}
+
+func (c Config) GetJwtSecretKey() []byte {
+	return []byte(c.JwtSecretKey)
 }
 
 func config() Config {

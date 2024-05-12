@@ -1,0 +1,20 @@
+meta {
+  name: Add worker
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:8080/v1/admin/worker
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  first_name: artem
+  last_name: qwe
+  surname: asd
+  email: asd1@gmail.com
+  password: asd
+  role: Работник
+}

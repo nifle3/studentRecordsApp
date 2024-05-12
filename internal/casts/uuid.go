@@ -5,7 +5,7 @@ import (
 )
 
 func UuidToString(uuId uuid.UUID) (string, error) {
-	idBytes, err := uuId.MarshalBinary()
+	idBytes, err := uuId.MarshalText()
 	if err != nil {
 		return "", err
 	}

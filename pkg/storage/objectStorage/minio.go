@@ -1,4 +1,4 @@
-package minio
+package objectStorage
 
 import (
 	"context"
@@ -11,15 +11,15 @@ import (
 var instance *minio.Client
 var once sync.Once
 
-func GetInstance(ctx context.Context, endpoint, password, login string) *minio.Client {
+func MustGetInstance(ctx context.Context, endpoint, password, login string) *minio.Client {
 	once.Do(func() {
-		instance = newMinio(ctx, endpoint, password, login)
+		instance = mustNewMinio(ctx, endpoint, password, login)
 	})
 
 	return instance
 }
 
-func newMinio(_ context.Context, endpoint, password, login string) *minio.Client {
+func mustNewMinio(_ context.Context, endpoint, password, login string) *minio.Client {
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(login, password, ""),
 		Secure: false,

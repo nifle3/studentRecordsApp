@@ -1,6 +1,7 @@
 package entities
 
 const (
-	UserAdmin  = "Админ"
-	UserWorker = "Работник"
+	UserAdmin   = "Админ"
+	UserWorker  = "Работник"
+	UserStudent = "Студент"
 )

@@ -2,11 +2,9 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"studentRecordsApp/pkg/customError"
-	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,11 +14,12 @@ import (
 
 type (
 	DocumentDb interface {
-		GetStudentsDocumentById(ctx context.Context, id uuid.UUID, userId uuid.UUID) (entities.Document, error)
-		GetStudentsDocumentsForUser(ctx context.Context, userId uuid.UUID) ([]entities.Document, error)
-		AddStudentsDocument(ctx context.Context, document entities.Document) error
-		DeleteStudentsDocument(ctx context.Context, id uuid.UUID, userId uuid.UUID) error
-		UpdateStudentsDocument(ctx context.Context, document entities.Document) error
+		Get(ctx context.Context, id uuid.UUID, userId uuid.UUID) (entities.Document, error)
+		GetForUser(ctx context.Context, userId uuid.UUID) ([]entities.Document, error)
+		Add(ctx context.Context, document entities.Document) error
+		Delete(ctx context.Context, id uuid.UUID) error
+		DeleteWithUserId(ctx context.Context, id, userId uuid.UUID) error
+		Update(ctx context.Context, document entities.Document) error
 	}
 
 	DocumentFS interface {
@@ -32,18 +31,18 @@ type (
 )
 
 type Document struct {
-	db *DocumentDb
-	fs *DocumentFS
+	db DocumentDb
+	fs DocumentFS
 }
 
 func NewDocument(db DocumentDb, fs DocumentFS) Document {
 	return Document{
-		db: &db,
-		fs: &fs,
+		db: db,
+		fs: fs,
 	}
 }
 
-func (d *Document) Add(ctx context.Context, document entities.Document, size int64) error {
+func (d *Document) Add(ctx context.Context, document entities.Document, size int64) *customError.Http {
 	if !document.CheckIsNotEmpty() {
 		return customError.New(http.StatusBadRequest, "Has an empty field")
 	}
@@ -53,85 +52,71 @@ func (d *Document) Add(ctx context.Context, document entities.Document, size int
 	document.Link = id.String()
 	document.CreatedAt = time.Now()
 
-	if err := (*d.fs).Add(ctx, document.Name, size, document.File); err != nil {
-		return err
+	if err := d.fs.Add(ctx, document.Name, size, document.File); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
-	return (*d.db).AddStudentsDocument(ctx, document)
+	if err := d.db.Add(ctx, document); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
 }
 
-func (d *Document) Update(ctx context.Context, document entities.Document, size int64) error {
+func (d *Document) Update(ctx context.Context, document entities.Document, size int64) *customError.Http {
 	if document.CheckIsNotEmpty() {
 		return customError.New(http.StatusBadRequest, "Has an empty field")
 	}
 
-	if err := (*d.fs).Update(ctx, document.File, size, document.Link); err != nil {
-		return err
+	if err := d.fs.Update(ctx, document.File, size, document.Link); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
-	return (*d.db).UpdateStudentsDocument(ctx, document)
+	if err := d.db.Update(ctx, document); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
 }
 
-func (d *Document) Delete(ctx context.Context, id, userId uuid.UUID, link string) error {
-	err := (*d.db).DeleteStudentsDocument(ctx, id, userId)
-	if err != nil {
-		return err
+func (d *Document) Delete(ctx context.Context, id uuid.UUID, link string) *customError.Http {
+	if err := d.db.Delete(ctx, id); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
-	return (*d.fs).Delete(ctx, link)
+	if err := d.fs.Delete(ctx, link); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
 }
 
-func (d *Document) GetById(ctx context.Context, id, userId uuid.UUID) (entities.Document, error) {
-	document, err := (*d.db).GetStudentsDocumentById(ctx, id, userId)
-	if err != nil {
-		return entities.Document{}, err
+func (d *Document) DeleteByUserdId(ctx context.Context, id, userId uuid.UUID, link string) *customError.Http {
+	if err := d.db.DeleteWithUserId(ctx, id, userId); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
-	_, err = (*d.fs).Get(ctx, document.Link)
+	if err := d.fs.Delete(ctx, link); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
+}
+
+func (d *Document) GetById(ctx context.Context, id, userId uuid.UUID) (entities.Document, *customError.Http) {
+	document, err := d.db.Get(ctx, id, userId)
 	if err != nil {
-		return entities.Document{}, err
+		return entities.Document{}, customError.New(http.StatusInternalServerError, err.Error())
 	}
 
 	return document, nil
 }
 
-func (d *Document) GetAllForUser(ctx context.Context, userId uuid.UUID) ([]entities.Document, error) {
-	documents, err := (*d.db).GetStudentsDocumentsForUser(ctx, userId)
+func (d *Document) GetAllForUser(ctx context.Context, userId uuid.UUID) ([]entities.Document, *customError.Http) {
+	documents, err := d.db.GetForUser(ctx, userId)
 	if err != nil {
-		return nil, err
+		return nil, customError.New(http.StatusInternalServerError, err.Error())
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(len(documents))
-
-	errChan := make(chan error)
-	defer close(errChan)
-
-	quitChan := make(chan interface{})
-	defer close(quitChan)
-
-	for idx := range documents {
-		go func() {
-			defer wg.Done()
-
-			_, err = (*d.fs).Get(ctx, documents[idx].Link)
-			if err != nil {
-				errChan <- fmt.Errorf("500")
-			}
-		}()
-	}
-
-	go func() {
-		wg.Wait()
-		quitChan <- struct{}{}
-	}()
-
-	for {
-		select {
-		case <-quitChan:
-			return documents, nil
-		case err := <-errChan:
-			return nil, err
-		}
-	}
+	return documents, nil
 }

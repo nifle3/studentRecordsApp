@@ -12,7 +12,7 @@ services:
     networks:
       - prod
     ports:
-      - '8080:8080'
+      - 8080:8080
     depends_on:
       postgres:
         condition: service_healthy
@@ -30,7 +30,7 @@ services:
       - DB_SSL=disable
       - FS_USER=nifle
       - FS_PASSWORD=nilfepassword
-      - FS_END_POINT=minio:9000
+      - FS_END_POINT=objectStorage:9000
       - SERVER_PORT=8080
       - SERVER_HOST=localhost
       - JWT_SECRET_KEY=mySecretKey
@@ -63,7 +63,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: nifle3123@gmail.com
       PGADMIN_DEFAULT_PASSWORD: nifle3password
     ports:
-      - "5050:80"
+      - 5050:80
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
@@ -96,19 +96,19 @@ services:
       retries: 5
 
   minio-mc:
-    container_name: minio-mc
+    container_name: objectStorage-mc
     image: quay.io/minio/mc
     depends_on:
       - minio
     entrypoint: >
       /bin/sh -c "
       /usr/bin/mc alias set myminio http://minio:9000 minio minio123;
-      /usr/bin/mc mb myminio/document;
-      /usr/bin/mc policy set public myminio/document;
-      /usr/bin/mc mb myminio/student-photo;
-      /usr/bin/mc policy set public myminio/student-photo;
-      /usr/bin/mc mb myminio/application;
-      /usr/bin/mc policy set public myminio/application;
+      /usr/bin/mc mb document;
+      /usr/bin/mc policy set public document;
+      /usr/bin/mc mb student-photo;
+      /usr/bin/mc policy set public student-photo;
+      /usr/bin/mc mb application;
+      /usr/bin/mc policy set public application;
       exit 0;"
 
 networks:

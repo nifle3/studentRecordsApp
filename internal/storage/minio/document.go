@@ -18,19 +18,11 @@ type Document struct {
 }
 
 func NewDocument(ctx context.Context, client *minio.Client) *Document {
-	exists, err := client.BucketExists(ctx, documentBucket)
-	if err != nil {
-		return nil
-	}
-
-	if !exists {
-		err = client.MakeBucket(ctx, documentBucket, minio.MakeBucketOptions{})
-	}
-
 	return &Document{
 		client: client,
 	}
 }
+
 func (s *Document) Get(ctx context.Context, link string) ([]byte, error) {
 	object, err := s.client.GetObject(ctx, documentBucket, link, minio.GetObjectOptions{})
 	if err != nil {

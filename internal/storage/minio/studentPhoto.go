@@ -18,15 +18,6 @@ type StudentPhoto struct {
 }
 
 func NewStudentPhoto(ctx context.Context, client *minio.Client) *StudentPhoto {
-	exists, err := client.BucketExists(ctx, studentPhotoBucket)
-	if err != nil {
-		return nil
-	}
-
-	if !exists {
-		err = client.MakeBucket(ctx, studentPhotoBucket, minio.MakeBucketOptions{})
-	}
-
 	return &StudentPhoto{
 		client: client,
 	}

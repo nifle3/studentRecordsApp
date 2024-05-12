@@ -2,9 +2,10 @@ package casts
 
 import (
 	"context"
-	entities "studentRecordsApp/internal/service/entites"
 
+	"studentRecordsApp/internal/service/entites"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
+	"studentRecordsApp/internal/transport/server/httpEntity"
 )
 
 func UserSqlToEntitie(_ context.Context, user sqlEntities.User) entities.User {
@@ -29,4 +30,20 @@ func UserEntitieToSql(_ context.Context, user entities.User) sqlEntities.User {
 		Password:  user.Password,
 		Role:      user.Role,
 	}
+}
+
+func UserEntitieToHttp(_ context.Context, user entities.User) (httpEntity.User, error) {
+	id, err := UuidToString(user.Id)
+	if err != nil {
+		return httpEntity.User{}, err
+	}
+
+	return httpEntity.User{
+		Id:        id,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Surname:   user.Surname,
+		Email:     user.Email,
+		Role:      user.Role,
+	}, nil
 }

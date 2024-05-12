@@ -3,41 +3,49 @@ package app
 import (
 	"context"
 	"log"
-	"os"
+	"time"
 
 	"studentRecordsApp/internal/config"
 	"studentRecordsApp/internal/service"
 	"studentRecordsApp/internal/storage/minio"
 	"studentRecordsApp/internal/storage/sql"
 	"studentRecordsApp/internal/transport/server"
+	"studentRecordsApp/pkg/storage/db"
+	"studentRecordsApp/pkg/storage/objectStorage"
 )
 
 func Start() {
 	cfg := config.GetConfig()
 	log.Printf("cfg is initialize")
 	log.Printf("%s", cfg.GetDbConnectionString())
-	storage, err := sql.New(cfg.GetDbConnectionString())
-	if err != nil {
-		log.Printf("%s", err.Error())
-		os.Exit(1)
-	}
+	ctx := context.Background()
+	sqlConn := db.MustNewSqlConnection(ctx, cfg.GetDbConnectionString())
 	log.Printf("db is initialize")
+	minioConn := objectStorage.MustGetInstance(ctx, cfg.FsEndPoint, cfg.FsPassword, cfg.FsUser)
 
-	fsStorage, err := minio.New(cfg.FsEndPoint, cfg.FsPassword, cfg.FsUser, false, context.Background())
-	if err != nil {
-		log.Printf("%s", err.Error())
-		os.Exit(1)
-	}
+	documentStorage := sql.NewDocument(sqlConn)
+	applicationStorage := sql.NewApplication(sqlConn)
+	studentStorage := sql.NewStudent(sqlConn)
+	userStorage := sql.NewUser(sqlConn)
+	phoneStorage := sql.NewPhone(sqlConn)
+	log.Printf("storages is initialize")
+
+	documentFs := minio.NewDocument(ctx, minioConn)
+	studebtPhotoFs := minio.NewStudentPhoto(ctx, minioConn)
+	applicationFs := minio.NewApplication(ctx, minioConn)
 	log.Printf("fs is initialize")
 
-	documentService := service.NewDocument(storage, fsStorage)
-	userService := service.NewUser(storage)
-	studentService := service.NewStudent(storage, fsStorage)
-	applicationService := service.NewApplication(storage, fsStorage)
-	phoneService := service.NewPhoneNumber(storage)
+	documentService := service.NewDocument(documentStorage, documentFs)
+	userService := service.NewUser(userStorage)
+	loginService := service.NewAuth(nil, studentStorage, userStorage)
+	studentService := service.NewStudent(studentStorage, studebtPhotoFs, phoneStorage)
+	applicationService := service.NewApplication(applicationStorage, applicationFs)
 	log.Printf("services is initialize")
 
-	httpServer := server.New(applicationService, studentService, phoneService, documentService, userService)
+	opts := server.NewOtps(cfg.ServerPort, time.Second*30)
+	mux := server.NewMux(applicationService, documentService, loginService, studentService, userService)
+
+	httpServer := server.New(opts, mux)
 	log.Printf("Server is listening on port %s", cfg.ServerPort)
 	log.Fatal(httpServer.Start())
 }

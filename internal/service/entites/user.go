@@ -2,6 +2,7 @@ package entities
 
 import (
 	"strings"
+	"studentRecordsApp/pkg/email"
 
 	"github.com/google/uuid"
 )
@@ -26,6 +27,17 @@ func (u *User) IsNotEmpty() bool {
 		u.Role != "" && !strings.Contains(u.Role, " ")
 }
 
+func (u *User) IsNotUpdateEmpty() bool {
+	return u.FirstName != "" && !strings.Contains(u.FirstName, " ") &&
+		u.LastName != "" && !strings.Contains(u.LastName, " ") &&
+		u.Surname != "" && !strings.Contains(u.Surname, " ") &&
+		u.Email != "" && !strings.Contains(u.Email, " ")
+}
+
 func (u *User) IsRoleCorrect() bool {
 	return u.Role == UserAdmin || u.Role == UserWorker
+}
+
+func (u *User) CheckEmail() bool {
+	return email.IsCorrect(u.Email) == nil
 }

@@ -18,15 +18,6 @@ type Application struct {
 }
 
 func NewApplication(ctx context.Context, client *minio.Client) *Application {
-	exists, err := client.BucketExists(ctx, applicationBucket)
-	if err != nil {
-		return nil
-	}
-
-	if !exists {
-		err = client.MakeBucket(ctx, applicationBucket, minio.MakeBucketOptions{})
-	}
-
 	return &Application{
 		client: client,
 	}
