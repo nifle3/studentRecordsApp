@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"studentRecordsApp/internal/service/entites"
+	"studentRecordsApp/internal/service/entities"
 )
 
 type (
@@ -22,6 +22,8 @@ type (
 		Update(ctx context.Context, application entities.Application) error
 		UpdateStatus(ctx context.Context, applicationID uuid.UUID, status string) error
 		Delete(ctx context.Context, id, userId uuid.UUID) error
+		CheckLinkWithUserId(ctx context.Context, id uuid.UUID, link string) (bool, error)
+		GetWithInfo(ctx context.Context) ([]entities.ApplicationWithInfo, error)
 	}
 
 	ApplicationFS interface {
@@ -46,6 +48,15 @@ func NewApplication(db ApplicationDb, fs ApplicationFS) Application {
 
 func (a *Application) GetAll(ctx context.Context) ([]entities.Application, *customError.Http) {
 	result, err := a.db.Get(ctx)
+	if err != nil {
+		return nil, customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return result, nil
+}
+
+func (a *Application) GetAllWithInfo(ctx context.Context) ([]entities.ApplicationWithInfo, *customError.Http) {
+	result, err := a.db.GetWithInfo(ctx)
 	if err != nil {
 		return nil, customError.New(http.StatusInternalServerError, err.Error())
 	}
@@ -91,9 +102,7 @@ func (a *Application) GetById(ctx context.Context, id uuid.UUID) (entities.Appli
 }
 
 func (a *Application) Add(ctx context.Context, application entities.Application, size int64) *customError.Http {
-	if !application.CheckStatus() {
-		return customError.New(http.StatusBadRequest, "Has an invalid status")
-	}
+	application.Status = entities.ApplicationCreated
 
 	if !application.CheckIsNotEmpty() {
 		return customError.New(http.StatusBadRequest, "Has an empty field")
@@ -115,7 +124,7 @@ func (a *Application) Add(ctx context.Context, application entities.Application,
 	return nil
 }
 
-func (a *Application) Update(ctx context.Context, application entities.Application) *customError.Http {
+func (a *Application) Update(ctx context.Context, application entities.Application, size int64) *customError.Http {
 	if !application.CheckStatus() {
 		return customError.New(http.StatusBadRequest, "Invalid status")
 	}
@@ -125,6 +134,10 @@ func (a *Application) Update(ctx context.Context, application entities.Applicati
 	}
 
 	if err := a.db.Update(ctx, application); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	if err := a.fs.Update(ctx, application.File, size, application.Link); err != nil {
 		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
@@ -149,4 +162,31 @@ func (a *Application) ChangeStatusToFinish(ctx context.Context, applicationID uu
 	}
 
 	return nil
+}
+
+func (a *Application) Download(ctx context.Context, link string) ([]byte, *customError.Http) {
+	file, err := a.fs.Get(ctx, link)
+	if err != nil {
+		return nil, customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return file, nil
+}
+
+func (a *Application) DownloadWithCheckId(ctx context.Context, link string, id uuid.UUID) ([]byte, *customError.Http) {
+	result, err := a.db.CheckLinkWithUserId(ctx, id, link)
+	if err != nil {
+		return nil, customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	if !result {
+		return nil, customError.New(http.StatusUnauthorized, "Invalid link")
+	}
+
+	file, err := a.fs.Get(ctx, link)
+	if err != nil {
+		return nil, customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return file, nil
 }

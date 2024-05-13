@@ -1,9 +1,9 @@
 package entities
 
 import (
-	"fmt"
 	"io"
 	"strings"
+	"studentRecordsApp/pkg/email"
 	"time"
 
 	"github.com/google/uuid"
@@ -39,12 +39,11 @@ func (s *Student) CheckIsNotEmpty() bool {
 		s.Surname != "" && !strings.Contains(s.Surname, " ") &&
 		s.PassportSeria != 0 &&
 		s.PassportNumber != 0 &&
-		s.BirthDate != time.Time{} &&
 		s.Email != "" && !strings.Contains(s.Email, " ") &&
 		s.Password != "" && !strings.Contains(s.Password, " ") &&
 		s.Country != "" && !strings.Contains(s.Country, " ") &&
 		s.City != "" && !strings.Contains(s.City, " ") &&
-		s.Street != "" && !strings.Contains(s.Street, " ") &&
+		s.Street != "" &&
 		s.HouseNumber != 0 &&
 		s.ApartmentNumber != 0 &&
 		s.Specialization != "" && !strings.Contains(s.Specialization, " ")
@@ -67,6 +66,6 @@ func (s *Student) CheckPassword() bool {
 	return len(s.Password) >= 6 && !strings.Contains(s.Password, " ")
 }
 
-func (s *Student) GetFullName() string {
-	return fmt.Sprintf("%s %s %s", s.FirstName, s.Surname, s.LastName)
+func (s *Student) CheckEmail() bool {
+	return email.IsCorrect(s.Email) == nil
 }

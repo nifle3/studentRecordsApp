@@ -5,10 +5,11 @@ import (
 	"io"
 	"net/http"
 	"studentRecordsApp/pkg/customError"
+	"time"
 
 	"github.com/google/uuid"
 
-	"studentRecordsApp/internal/service/entites"
+	"studentRecordsApp/internal/service/entities"
 	"studentRecordsApp/pkg/password"
 )
 
@@ -16,6 +17,7 @@ type (
 	StudentDB interface {
 		GetAll(ctx context.Context) ([]entities.Student, error)
 		Get(ctx context.Context, id uuid.UUID) (entities.Student, error)
+		GetLinkById(ctx context.Context, id uuid.UUID) (string, error)
 		Add(ctx context.Context, student entities.Student) error
 		Update(ctx context.Context, student entities.Student) error
 		Delete(ctx context.Context, id uuid.UUID) error
@@ -56,6 +58,7 @@ func (s Student) Add(ctx context.Context, student entities.Student, size int64) 
 	id := uuid.New()
 	student.Id = id
 	student.LinkPhoto = id.String()
+	student.EnrollYear = time.Now()
 
 	var err error
 	student.Password, err = password.Hash(student.Password)
@@ -107,7 +110,7 @@ func (s Student) Update(ctx context.Context, student entities.Student, size int6
 func (s Student) checkCorrectStudent(student entities.Student, _ context.Context) bool {
 	return student.CheckIsNotEmpty() && student.CheckNumber() && student.CheckPassportSeria() &&
 		student.CheckBirthdate() &&
-		student.CheckPassword()
+		student.CheckPassword() && student.CheckEmail()
 }
 
 func (s Student) Delete(ctx context.Context, id uuid.UUID, link string) *customError.Http {
@@ -136,9 +139,27 @@ func (s Student) Get(ctx context.Context, id uuid.UUID) (entities.Student, *cust
 	return student, nil
 }
 
-// TODO: add get image
-func (s Student) GetImage(ctx context.Context, link string) (io.Reader, *customError.Http) {
-	return nil, nil
+func (s Student) GetImage(ctx context.Context, link string) ([]byte, *customError.Http) {
+	file, err := s.fs.Get(ctx, link)
+	if err != nil {
+		return nil, customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return file, nil
+}
+
+func (s Student) GetImageById(ctx context.Context, id uuid.UUID) ([]byte, *customError.Http) {
+	link, err := s.db.GetLinkById(ctx, id)
+	if err != nil {
+		return nil, customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	file, err := s.fs.Get(ctx, link)
+	if err != nil {
+		return nil, customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return file, nil
 }
 
 func (s Student) GetAll(ctx context.Context) ([]entities.Student, *customError.Http) {

@@ -8,7 +8,7 @@ import (
 
 	"studentRecordsApp/internal/casts"
 	"studentRecordsApp/internal/service"
-	"studentRecordsApp/internal/service/entites"
+	"studentRecordsApp/internal/service/entities"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 )
 
@@ -79,7 +79,7 @@ func (d *Document) DeleteWithUserId(ctx context.Context, id, userId uuid.UUID) e
 }
 
 func (d *Document) Update(ctx context.Context, document entities.Document) error {
-	_, err := d.db.ExecContext(ctx, `UPDATE StudentsDocuments SET _name = $1, _type = $2, link = $3 
-                         WHERE id = $4`, document.Name, document.Type, document.Link, document.Id)
+	_, err := d.db.ExecContext(ctx, `UPDATE StudentsDocuments SET _name = $1, _type = $2
+                         WHERE id = $3`, document.Name, document.Type, document.Id)
 	return err
 }

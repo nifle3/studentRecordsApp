@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 
-	"studentRecordsApp/internal/service/entites"
+	"studentRecordsApp/internal/service/entities"
 	"studentRecordsApp/pkg/password"
 )
 

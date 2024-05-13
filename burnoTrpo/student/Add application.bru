@@ -1,0 +1,18 @@
+meta {
+  name: Add application
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/v1/student/application
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  contact_info: 89047667071
+  text: Штука
+  name: Шутка
+  file: @file(C:\Users\Nifie\Downloads\ИСРПО.pdf)
+}

@@ -1,0 +1,15 @@
+meta {
+  name: Patch document file
+  type: http
+  seq: 15
+}
+
+patch {
+  url: http://localhost:8080/v1/worker/document/file/81c67f04-1c0d-4fbc-8ab4-bd556e2fdc18
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  file: @file(C:\Users\Nifie\Downloads\Лабораторная работа №1(3).pdf)
+}

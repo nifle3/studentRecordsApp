@@ -30,9 +30,9 @@ func Start() {
 	phoneStorage := sql.NewPhone(sqlConn)
 	log.Printf("storages is initialize")
 
-	documentFs := minio.NewDocument(ctx, minioConn)
-	studebtPhotoFs := minio.NewStudentPhoto(ctx, minioConn)
-	applicationFs := minio.NewApplication(ctx, minioConn)
+	documentFs := minio.MustNewDocument(ctx, minioConn)
+	studebtPhotoFs := minio.MustNewStudentPhoto(ctx, minioConn)
+	applicationFs := minio.MustNewApplication(ctx, minioConn)
 	log.Printf("fs is initialize")
 
 	documentService := service.NewDocument(documentStorage, documentFs)

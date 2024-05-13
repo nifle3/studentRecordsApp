@@ -8,7 +8,7 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-const studentPhotoBucket = "student_photo"
+const studentPhotoBucket = "student-photo"
 
 var _ service.StudentFS = (*StudentPhoto)(nil)
 var _ service.StudentFS = &StudentPhoto{}
@@ -17,7 +17,16 @@ type StudentPhoto struct {
 	client *minio.Client
 }
 
-func NewStudentPhoto(ctx context.Context, client *minio.Client) *StudentPhoto {
+func MustNewStudentPhoto(ctx context.Context, client *minio.Client) *StudentPhoto {
+	result, err := client.BucketExists(ctx, studentPhotoBucket)
+
+	if !result {
+		err = client.MakeBucket(ctx, studentPhotoBucket, minio.MakeBucketOptions{})
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+
 	return &StudentPhoto{
 		client: client,
 	}
@@ -30,21 +39,10 @@ func (s *StudentPhoto) Get(ctx context.Context, link string) ([]byte, error) {
 	}
 
 	defer object.Close()
-	info, err := object.Stat()
+
+	result, err := io.ReadAll(object)
 	if err != nil {
 		return nil, err
-	}
-
-	result := make([]byte, 0, info.Size)
-	for {
-		_, err := object.Read(result)
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return result, nil

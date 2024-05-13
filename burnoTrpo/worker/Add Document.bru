@@ -1,0 +1,18 @@
+meta {
+  name: Add Document
+  type: http
+  seq: 10
+}
+
+post {
+  url: http://localhost:8080/v1/worker/document
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  student_id: 5fe20191-80cb-486e-81da-698a2750af59
+  name: Паспорт
+  type: Паспорт
+  file: @file(C:\Users\Nifie\Downloads\ИСРПО.pdf)
+}

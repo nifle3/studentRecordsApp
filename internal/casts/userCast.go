@@ -3,7 +3,7 @@ package casts
 import (
 	"context"
 
-	"studentRecordsApp/internal/service/entites"
+	"studentRecordsApp/internal/service/entities"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 	"studentRecordsApp/internal/transport/server/httpEntity"
 )

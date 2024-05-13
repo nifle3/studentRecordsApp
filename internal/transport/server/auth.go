@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"studentRecordsApp/internal/service/entites"
+    "studentRecordsApp/internal/service/entities"
 )
 
 type SecureHandler func(w http.ResponseWriter, r *http.Request, userId uuid.UUID)

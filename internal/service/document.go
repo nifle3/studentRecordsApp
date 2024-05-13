@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"studentRecordsApp/internal/service/entites"
+	"studentRecordsApp/internal/service/entities"
 )
 
 type (
@@ -52,7 +52,7 @@ func (d *Document) Add(ctx context.Context, document entities.Document, size int
 	document.Link = id.String()
 	document.CreatedAt = time.Now()
 
-	if err := d.fs.Add(ctx, document.Name, size, document.File); err != nil {
+	if err := d.fs.Add(ctx, document.Link, size, document.File); err != nil {
 		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
@@ -63,16 +63,20 @@ func (d *Document) Add(ctx context.Context, document entities.Document, size int
 	return nil
 }
 
-func (d *Document) Update(ctx context.Context, document entities.Document, size int64) *customError.Http {
+func (d *Document) Update(ctx context.Context, document entities.Document) *customError.Http {
 	if document.CheckIsNotEmpty() {
 		return customError.New(http.StatusBadRequest, "Has an empty field")
 	}
 
-	if err := d.fs.Update(ctx, document.File, size, document.Link); err != nil {
+	if err := d.db.Update(ctx, document); err != nil {
 		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
-	if err := d.db.Update(ctx, document); err != nil {
+	return nil
+}
+
+func (d *Document) UpdateFile(ctx context.Context, link string, size int64, file io.Reader) *customError.Http {
+	if err := d.fs.Update(ctx, file, size, link); err != nil {
 		return customError.New(http.StatusInternalServerError, err.Error())
 	}
 
@@ -119,4 +123,13 @@ func (d *Document) GetAllForUser(ctx context.Context, userId uuid.UUID) ([]entit
 	}
 
 	return documents, nil
+}
+
+func (d *Document) DownloadDocument(ctx context.Context, link string) ([]byte, *customError.Http) {
+	result, err := d.fs.Get(ctx, link)
+	if err != nil {
+		return nil, customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return result, nil
 }

@@ -17,7 +17,19 @@ type Document struct {
 	client *minio.Client
 }
 
-func NewDocument(ctx context.Context, client *minio.Client) *Document {
+func MustNewDocument(ctx context.Context, client *minio.Client) *Document {
+	result, err := client.BucketExists(ctx, documentBucket)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	if !result {
+		err = client.MakeBucket(ctx, documentBucket, minio.MakeBucketOptions{})
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+
 	return &Document{
 		client: client,
 	}
@@ -30,21 +42,10 @@ func (s *Document) Get(ctx context.Context, link string) ([]byte, error) {
 	}
 
 	defer object.Close()
-	info, err := object.Stat()
+
+	result, err := io.ReadAll(object)
 	if err != nil {
 		return nil, err
-	}
-
-	result := make([]byte, 0, info.Size)
-	for {
-		_, err := object.Read(result)
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return result, nil
@@ -52,7 +53,7 @@ func (s *Document) Get(ctx context.Context, link string) ([]byte, error) {
 
 func (s *Document) Add(ctx context.Context, name string, size int64, file io.Reader) error {
 	_, err := s.client.PutObject(ctx, documentBucket, name, file, size, minio.PutObjectOptions{
-		ContentType: "image/jpeg",
+		ContentType: "application/pdf",
 	})
 	if err != nil {
 		return err

@@ -17,7 +17,19 @@ type Application struct {
 	client *minio.Client
 }
 
-func NewApplication(ctx context.Context, client *minio.Client) *Application {
+func MustNewApplication(ctx context.Context, client *minio.Client) *Application {
+	result, err := client.BucketExists(ctx, applicationBucket)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	if !result {
+		err = client.MakeBucket(ctx, applicationBucket, minio.MakeBucketOptions{})
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+
 	return &Application{
 		client: client,
 	}
@@ -30,21 +42,10 @@ func (s *Application) Get(ctx context.Context, link string) ([]byte, error) {
 	}
 
 	defer object.Close()
-	info, err := object.Stat()
+
+	result, err := io.ReadAll(object)
 	if err != nil {
 		return nil, err
-	}
-
-	result := make([]byte, 0, info.Size)
-	for {
-		_, err := object.Read(result)
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return result, nil

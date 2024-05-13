@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"studentRecordsApp/internal/casts"
-	"studentRecordsApp/internal/service/entites"
+	"studentRecordsApp/internal/service/entities"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 )
 
@@ -16,6 +16,36 @@ var _ service.ApplicationDb = (*Application)(nil)
 
 type Application struct {
 	db *sqlx.DB
+}
+
+func (a *Application) GetWithInfo(ctx context.Context) ([]entities.ApplicationWithInfo, error) {
+	result := make([]sqlEntities.ApplicationWithInfo, 0)
+	err := a.db.SelectContext(ctx, &result, `SELECT applications.id, applications._name, applications.created_at,
+		applications.link, applications.contact_info,
+		applications._text, students.first_name, students.last_name, students.surname, students._group, students.course
+    	FROM Applications 
+        INNER JOIN Students on applications.student_id = students.id;`)
+	if err != nil {
+		return nil, err
+	}
+
+	entitieResult := make([]entities.ApplicationWithInfo, 0, len(result))
+	for _, value := range result {
+		entitieResult = append(entitieResult, casts.ApplicationWithInfoToEntite(ctx, value))
+	}
+
+	return entitieResult, err
+}
+
+func (a *Application) CheckLinkWithUserId(ctx context.Context, id uuid.UUID, link string) (bool, error) {
+	var result bool
+	err := a.db.GetContext(ctx, &result, "SELECT EXISTS(SELECT * FROM Applications WHERE link = $1 AND student_id = $2)",
+		link, id)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func NewApplication(db *sqlx.DB) *Application {

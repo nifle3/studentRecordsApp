@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"studentRecordsApp/internal/casts"
-	"studentRecordsApp/internal/service/entites"
+	"studentRecordsApp/internal/service/entities"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
 )
 

@@ -29,8 +29,8 @@ services:
       - DB_NAME=student_records
       - DB_SSL=disable
       - FS_USER=nifle
-      - FS_PASSWORD=nilfepassword
-      - FS_END_POINT=objectStorage:9000
+      - FS_PASSWORD=Strong#Pass#2022
+      - FS_END_POINT=minio:9000
       - SERVER_PORT=8080
       - SERVER_HOST=localhost
       - JWT_SECRET_KEY=mySecretKey
@@ -81,35 +81,18 @@ services:
       - 9000:9000
       - 9001:9001
     volumes:
-      - minio_data_1:/data1
-      - minio_data_2:/data2
+      - minio_data_:/data
     networks:
       - prod
     environment:
       MINIO_ROOT_USER: nifle
-      MINIO_ROOT_PASSWORD: nilfepassword
+      MINIO_ROOT_PASSWORD: Strong#Pass#2022
     command: server --console-address ":9001" /data
     healthcheck:
       test: [ "CMD", "mc", "ready", "local" ]
       interval: 5s
       timeout: 5s
       retries: 5
-
-  minio-mc:
-    container_name: objectStorage-mc
-    image: quay.io/minio/mc
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc alias set myminio http://minio:9000 minio minio123;
-      /usr/bin/mc mb document;
-      /usr/bin/mc policy set public document;
-      /usr/bin/mc mb student-photo;
-      /usr/bin/mc policy set public student-photo;
-      /usr/bin/mc mb application;
-      /usr/bin/mc policy set public application;
-      exit 0;"
 
 networks:
   prod:
@@ -118,5 +101,4 @@ networks:
 volumes:
   postgres_data:
   pgadmin_data:
-  minio_data_1:
-  minio_data_2:
+  minio_data_:

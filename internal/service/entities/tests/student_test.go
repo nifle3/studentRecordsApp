@@ -2,11 +2,12 @@ package tests
 
 import (
 	"fmt"
-	"studentRecordsApp/internal/service/entites"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	"studentRecordsApp/internal/service/entities"
 )
 
 func TestCheckBirthdate(t *testing.T) {
@@ -37,7 +38,7 @@ func TestCheckBirthdate(t *testing.T) {
 		t.Run(fmt.Sprintf("Test %d: %s", idx, value.name), func(t *testing.T) {
 			t.Parallel()
 
-			testingStudent := entities.entities{BirthDate: value.birthdate}
+			testingStudent := entities.Student{BirthDate: value.birthdate}
 
 			result := testingStudent.CheckBirthdate()
 			assert.Equal(t, value.expected, result)
@@ -74,7 +75,7 @@ func TestCheckPassportSeria(t *testing.T) {
 		t.Run(fmt.Sprintf("Test %d: %s", idx, value.name), func(t *testing.T) {
 			t.Parallel()
 
-			testingStudent := entities.entities{PassportSeria: value.seria}
+			testingStudent := entities.Student{PassportSeria: value.seria}
 
 			result := testingStudent.CheckPassportSeria()
 			assert.Equal(t, value.expected, result)

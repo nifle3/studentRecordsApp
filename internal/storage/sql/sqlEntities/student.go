@@ -23,6 +23,6 @@ type Student struct {
 	EnrollYear      time.Time `db:"enroll_year"`
 	Specialization  string    `db:"specialization"`
 	LinkPhoto       string    `db:"link_photo"`
-	Group           int       `db:"course"`
-	Course          int       `db:"_course"`
+	Group           int       `db:"_group"`
+	Course          int       `db:"course"`
 }

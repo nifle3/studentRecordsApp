@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"studentRecordsApp/internal/casts"
-	"studentRecordsApp/internal/service/entites"
+	"studentRecordsApp/internal/service/entities"
 	"studentRecordsApp/internal/transport/server/httpEntity"
 )
 

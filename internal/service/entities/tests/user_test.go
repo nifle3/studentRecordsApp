@@ -2,9 +2,12 @@ package tests
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"studentRecordsApp/internal/service/entites"
 	"testing"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+
+	"studentRecordsApp/internal/service/entities"
 )
 
 func TestIsNotEmpty(t *testing.T) {
@@ -13,13 +16,13 @@ func TestIsNotEmpty(t *testing.T) {
 	dataSet := []struct {
 		name     string
 		expected bool
-		input    entities.entities
+		input    entities.User
 	}{
 		{
 			"correct input",
 			true,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: "John",
 				LastName:  "Doe",
 				Surname:   "Smith",
@@ -32,7 +35,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"empty first name",
 			false,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: "",
 				LastName:  "Doe",
 				Surname:   "Smith",
@@ -45,7 +48,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"empty last name",
 			false,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: "John",
 				LastName:  "",
 				Surname:   "Smith",
@@ -58,7 +61,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"empty surname",
 			false,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: "John",
 				LastName:  "Doe",
 				Surname:   "",
@@ -71,7 +74,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"empty email",
 			false,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: "John",
 				LastName:  "Doe",
 				Surname:   "Smith",
@@ -84,7 +87,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"empty password",
 			false,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: "John",
 				LastName:  "Doe",
 				Surname:   "Smith",
@@ -97,7 +100,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"empty role",
 			false,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: "John",
 				LastName:  "Doe",
 				Surname:   "Smith",
@@ -110,7 +113,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"full empty",
 			false,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: "",
 				LastName:  "",
 				Surname:   "",
@@ -123,7 +126,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"space first name",
 			false,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: " ",
 				LastName:  "Doe",
 				Surname:   "Smith",
@@ -136,7 +139,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"space last name",
 			false,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: "John",
 				LastName:  "  ",
 				Surname:   "Smith",
@@ -149,7 +152,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"space surname",
 			false,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: "John",
 				LastName:  "Doe",
 				Surname:   " ",
@@ -162,7 +165,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"space email",
 			false,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: "John",
 				LastName:  "Doe",
 				Surname:   "Smith",
@@ -175,7 +178,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"space password",
 			false,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: "John",
 				LastName:  "Doe",
 				Surname:   "Smith",
@@ -188,7 +191,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"space role",
 			false,
 			entities.User{
-				Id:        "",
+				Id:        uuid.Nil,
 				FirstName: "John",
 				LastName:  "Doe",
 				Surname:   "Smith",
@@ -201,7 +204,7 @@ func TestIsNotEmpty(t *testing.T) {
 			"full space",
 			false,
 			entities.User{
-				Id:        " ",
+				Id:        uuid.Nil,
 				FirstName: " ",
 				LastName:  " ",
 				Surname:   " ",

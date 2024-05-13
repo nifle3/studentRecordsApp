@@ -2,9 +2,10 @@ package casts
 
 import (
 	"context"
-	entities "studentRecordsApp/internal/service/entites"
 
+	"studentRecordsApp/internal/service/entities"
 	"studentRecordsApp/internal/storage/sql/sqlEntities"
+	"studentRecordsApp/internal/transport/server/httpEntity"
 )
 
 func DocumentSqlToEntite(_ context.Context, doc sqlEntities.StudentsDocument) entities.Document {
@@ -28,4 +29,19 @@ func DocumentEntiteToSql(_ context.Context, doc entities.Document) sqlEntities.S
 		Link:      doc.Link,
 		CreatedAt: doc.CreatedAt,
 	}
+}
+
+func DocumentEntitieToDocumentSelf(_ context.Context, doc entities.Document) (httpEntity.DocumentSelf, error) {
+	id, err := UuidToString(doc.Id)
+	if err != nil {
+		return httpEntity.DocumentSelf{}, err
+	}
+
+	return httpEntity.DocumentSelf{
+		Id:        id,
+		Name:      doc.Name,
+		Type:      doc.Type,
+		Link:      doc.Link,
+		CreatedAt: doc.CreatedAt,
+	}, nil
 }

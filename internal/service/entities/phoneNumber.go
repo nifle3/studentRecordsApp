@@ -25,7 +25,7 @@ func (p *PhoneNumber) CheckCorrectNumber() error {
 		return err
 	}
 
-	if reg.MatchString(p.Phone) {
+	if !reg.MatchString(p.Phone) {
 		return errors.New("invalid phone number")
 	}
 

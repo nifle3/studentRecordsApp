@@ -1,0 +1,33 @@
+meta {
+  name: Add student
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/v1/worker/student
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  name: Артем
+  course: 1
+  apartment: 20
+  house: 2
+  birthdate: 2005-06-29
+  passport_number: 789231
+  passport_seria: 1234
+  group: 4337
+  image: @file(C:\Users\Nifie\Downloads\ava.jpeg)
+  surname: Куприянов
+  last_name: Сергеевич
+  email: qwe1@gmail.com
+  password: qweqwe
+  country: Россия
+  city: Казань
+  street: БольшаяКрасная
+  specialization: Программирование
+  phone1: 89047667071
+  description1: Мой
+}

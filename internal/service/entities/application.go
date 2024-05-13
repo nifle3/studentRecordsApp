@@ -19,6 +19,21 @@ type Application struct {
 	File      io.Reader
 }
 
+type ApplicationWithInfo struct {
+	Id          uuid.UUID
+	StudentId   uuid.UUID
+	ContactInfo string
+	Name        string
+	Text        string
+	// Status must be "Создан" or "Закрыт"
+	Status    string
+	CreatedAt time.Time
+	Link      string
+	FIO       string
+	Course    int
+	Group     int
+}
+
 func (a *Application) CheckIsNotEmpty() bool {
 	return a.StudentId != uuid.Nil &&
 		a.ContactInfo != "" &&

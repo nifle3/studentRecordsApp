@@ -1,0 +1,17 @@
+meta {
+  name: Login student
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:8080/v1/auth
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  password: qweqwe
+  login: qwe1@gmail.com
+  role: Студент
+}
