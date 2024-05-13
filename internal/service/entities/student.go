@@ -47,6 +47,21 @@ func (s *Student) CheckIsNotEmpty() bool {
 		s.HouseNumber != 0 &&
 		s.ApartmentNumber != 0 &&
 		s.Specialization != "" && !strings.Contains(s.Specialization, " ")
+}
+
+func (s *Student) CheckIsNotEmptyForUpdate() bool {
+	return s.FirstName != "" && !strings.Contains(s.FirstName, " ") &&
+		s.LastName != "" && !strings.Contains(s.LastName, " ") &&
+		s.Surname != "" && !strings.Contains(s.Surname, " ") &&
+		s.PassportSeria != 0 &&
+		s.PassportNumber != 0 &&
+		s.Email != "" && !strings.Contains(s.Email, " ") &&
+		s.Country != "" && !strings.Contains(s.Country, " ") &&
+		s.City != "" && !strings.Contains(s.City, " ") &&
+		s.Street != "" &&
+		s.HouseNumber != 0 &&
+		s.ApartmentNumber != 0 &&
+		s.Specialization != "" && !strings.Contains(s.Specialization, " ")
 
 }
 

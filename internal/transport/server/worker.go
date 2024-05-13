@@ -209,9 +209,130 @@ func (s Server) WorkerAddStudent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-// TODO:
 func (s Server) WorkerPatchStudent(w http.ResponseWriter, r *http.Request) {
+	id, err := casts.StringToUuid(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
+	group, err := strconv.Atoi(r.FormValue("group"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	passportSeria, err := strconv.Atoi(r.FormValue("passport_seria"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	passportNumber, err := strconv.Atoi(r.FormValue("passport_number"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	birth, err := time.Parse(layoutISO, r.FormValue("birthdate"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	hostNumber, err := strconv.Atoi(r.FormValue("house"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	apartment, err := strconv.Atoi(r.FormValue("apartment"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	course, err := strconv.Atoi(r.PostFormValue("course"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	result := entities.Student{
+		Id:              id,
+		FirstName:       r.FormValue("name"),
+		Surname:         r.FormValue("surname"),
+		LastName:        r.FormValue("last_name"),
+		Group:           group,
+		PassportSeria:   passportSeria,
+		PassportNumber:  passportNumber,
+		BirthDate:       birth,
+		Email:           r.FormValue("email"),
+		Password:        r.FormValue("password"),
+		Country:         r.FormValue("country"),
+		City:            r.FormValue("city"),
+		Street:          r.FormValue("street"),
+		HouseNumber:     hostNumber,
+		ApartmentNumber: apartment,
+		Specialization:  r.FormValue("specialization"),
+		Course:          course,
+		PhoneNumbers:    make([]entities.PhoneNumber, 0, 0),
+	}
+
+	phoneName := "phone"
+	descriptionName := "description"
+	phoneId := "phone_id"
+	i := 1
+	for r.PostForm.Has(phoneName+strconv.Itoa(i)) && r.PostForm.Has(descriptionName+strconv.Itoa(i)) &&
+		r.PostForm.Has(phoneId+strconv.Itoa(i)) {
+		phoneId, err := casts.StringToUuid(r.PostFormValue(phoneId + strconv.Itoa(i)))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		result.PhoneNumbers = append(result.PhoneNumbers, entities.PhoneNumber{
+			Id:          phoneId,
+			StudentId:   id,
+			Phone:       r.PostFormValue(phoneName + strconv.Itoa(i)),
+			Description: r.PostFormValue(descriptionName + strconv.Itoa(i)),
+		})
+
+		i++
+	}
+
+	if err := s.student.Update(r.Context(), result); err != nil {
+		http.Error(w, err.GetMsg(), err.GetCode())
+		return
+	}
+}
+
+func (s Server) WorkerDeleteStudent(w http.ResponseWriter, r *http.Request) {
+	id, err := casts.StringToUuid(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := s.student.Delete(r.Context(), id, id.String()); err != nil {
+		http.Error(w, err.GetMsg(), err.GetCode())
+		return
+	}
+}
+
+func (s Server) WorkerPatchImageStudent(w http.ResponseWriter, r *http.Request) {
+	link := r.PathValue("link")
+
+	image, imageInfo, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := s.student.UpdateImage(r.Context(), image, imageInfo.Size, link); err != nil {
+		http.Error(w, err.GetMsg(), err.GetCode())
+		return
+	}
 }
 
 func (s Server) WorkerGetApplications(w http.ResponseWriter, r *http.Request) {

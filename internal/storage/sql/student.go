@@ -82,8 +82,8 @@ func (s *Student) Update(ctx context.Context, student entities.Student) error {
 		`UPDATE Students SET first_name =$1, last_name =$2, surname =$3, passport_seria =$4, passport_number =$5,
                     birth_date =$6, email =$7, country =$8, city =$9, street =$10, house =$11, apartment =$12, 
                     enroll_year =$13, specialization =$14
-                WHERE id =$16;`, sqlStudent.FirstName, sqlStudent.LastName, sqlStudent.Surname, sqlStudent.PassportSeria,
-		sqlStudent.PassportNumber, sqlStudent.BirthDate, sqlStudent.Email, sqlStudent.Password, sqlStudent.Country,
+                WHERE id =$15;`, sqlStudent.FirstName, sqlStudent.LastName, sqlStudent.Surname, sqlStudent.PassportSeria,
+		sqlStudent.PassportNumber, sqlStudent.BirthDate, sqlStudent.Email, sqlStudent.Country,
 		sqlStudent.City, sqlStudent.Street, sqlStudent.HouseNumber, sqlStudent.ApartmentNumber, sqlStudent.EnrollYear,
 		sqlStudent.Specialization, sqlStudent.Id)
 

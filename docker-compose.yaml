@@ -34,6 +34,11 @@ services:
       - SERVER_PORT=8080
       - SERVER_HOST=localhost
       - JWT_SECRET_KEY=mySecretKey
+    healthcheck:
+      test: curl --fail http://localhost:8080/v1/ping || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   postgres:
     container_name: postgres
@@ -81,7 +86,7 @@ services:
       - 9000:9000
       - 9001:9001
     volumes:
-      - minio_data_:/data
+      - minio_data:/data
     networks:
       - prod
     environment:
@@ -94,6 +99,22 @@ services:
       timeout: 5s
       retries: 5
 
+  webserver:
+    image: nginx:latest
+    container_name: webserver
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - prod
+    volumes:
+      - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/localhost.crt:/etc/nginx/ssl/live/kitup.local.org/localhost.crt
+      - ./nginx/localhost.key:/etc/nginx/ssl/live/kitup.local.org/localhost.key
+    depends_on:
+      - backend
+
 networks:
   prod:
     driver: bridge
@@ -101,4 +122,4 @@ networks:
 volumes:
   postgres_data:
   pgadmin_data:
-  minio_data_:
+  minio_data:

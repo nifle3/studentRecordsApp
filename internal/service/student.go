@@ -26,6 +26,7 @@ type (
 	StudentPhoneDB interface {
 		Add(ctx context.Context, phone entities.PhoneNumber) error
 		GetForUser(ctx context.Context, id uuid.UUID) ([]entities.PhoneNumber, error)
+		Update(ctx context.Context, phone entities.PhoneNumber) error
 	}
 
 	StudentFS interface {
@@ -91,13 +92,15 @@ func (s Student) Add(ctx context.Context, student entities.Student, size int64) 
 	return nil
 }
 
-func (s Student) Update(ctx context.Context, student entities.Student, size int64) *customError.Http {
-	if !s.checkCorrectStudent(student, ctx) {
-		return customError.New(http.StatusBadRequest, "Has some invalid fields")
-	}
+func (s Student) checkCorrectStudent(student entities.Student, _ context.Context) bool {
+	return student.CheckIsNotEmpty() && student.CheckNumber() && student.CheckPassportSeria() &&
+		student.CheckBirthdate() &&
+		student.CheckPassword() && student.CheckEmail()
+}
 
-	if err := s.fs.Update(ctx, student.Photo, size, student.LinkPhoto); err != nil {
-		return customError.New(http.StatusInternalServerError, err.Error())
+func (s Student) Update(ctx context.Context, student entities.Student) *customError.Http {
+	if !s.checkCorrectStudentForUpdate(student, ctx) {
+		return customError.New(http.StatusBadRequest, "Has some invalid fields")
 	}
 
 	if err := s.db.Update(ctx, student); err != nil {
@@ -107,10 +110,17 @@ func (s Student) Update(ctx context.Context, student entities.Student, size int6
 	return nil
 }
 
-func (s Student) checkCorrectStudent(student entities.Student, _ context.Context) bool {
-	return student.CheckIsNotEmpty() && student.CheckNumber() && student.CheckPassportSeria() &&
-		student.CheckBirthdate() &&
-		student.CheckPassword() && student.CheckEmail()
+func (s Student) checkCorrectStudentForUpdate(student entities.Student, _ context.Context) bool {
+	return student.CheckIsNotEmptyForUpdate() && student.CheckNumber() && student.CheckPassportSeria() &&
+		student.CheckBirthdate() && student.CheckEmail()
+}
+
+func (s Student) UpdateImage(ctx context.Context, file io.Reader, size int64, link string) *customError.Http {
+	if err := s.fs.Update(ctx, file, size, link); err != nil {
+		return customError.New(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
 }
 
 func (s Student) Delete(ctx context.Context, id uuid.UUID, link string) *customError.Http {

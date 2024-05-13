@@ -52,10 +52,15 @@ func New(opts Opts, mux Mux) Server {
 	}
 }
 
+func (s Server) Ping(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (s Server) Start() error {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /v1/auth", s.Login)
+	mux.HandleFunc("GET /v1/ping", s.GetRole)
 	mux.HandleFunc("GET /v1/role", s.GetRole)
 	mux.HandleFunc("GET /v1/role/worker", s.GetWorkerRole)
 
@@ -73,7 +78,11 @@ func (s Server) Start() error {
 		s.WorkerGetStudentImage))
 	mux.HandleFunc("POST /v1/worker/student", s.SecureHandlerWithOutId(entities.UserWorker, s.WorkerAddStudent))
 	mux.HandleFunc("PATCH /v1/worker/student/{id}", s.SecureHandlerWithOutId(entities.UserWorker,
-		s.WorkerPatchStudent)) // TODO!
+		s.WorkerPatchStudent))
+	mux.HandleFunc("PATCH /v1/worker/student/image/{link}", s.SecureHandlerWithOutId(entities.UserWorker,
+		s.WorkerPatchImageStudent))
+	mux.HandleFunc("DELETE /v1/worker/student/{id}", s.SecureHandlerWithOutId(entities.UserWorker,
+		s.WorkerDeleteStudent))
 	mux.HandleFunc("GET /v1/worker/application", s.SecureHandlerWithOutId(entities.UserWorker,
 		s.WorkerGetApplications))
 	mux.HandleFunc("GET /v1/worker/student/application/{id}", s.SecureHandlerWithOutId(entities.UserWorker,

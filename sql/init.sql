@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS Students (
 
 CREATE TABLE IF NOT EXISTS PhoneNumbers (
     id UUID PRIMARY KEY,
-    student_id UUID NOT NULL REFERENCES Students(id),
+    student_id UUID NOT NULL REFERENCES Students(id) ON DELETE CASCADE ON UPDATE CASCADE,
     country_code VARCHAR(3) NOT NULL,
     city_code VARCHAR(10) NOT NULL,
     code VARCHAR(10) NOT NULL,
