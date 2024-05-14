@@ -1,0 +1,13 @@
+.tableAction {
+    cursor: pointer;
+    color: #0074d9;
+    transition: color 300ms ease-out;
+    text-decoration: none;
+}
+
+
+@media (hover:hover) {
+    .tableAction:hover {
+        color: black;
+    }
+}

@@ -1,0 +1,12 @@
+.backText {
+    width: fit-content;
+    cursor: pointer;
+    color: #0074d9;
+    transition: color 300ms ease-out;
+}
+
+@media (hover:hover) {
+    .backText:hover {
+        color: black;
+    }
+}

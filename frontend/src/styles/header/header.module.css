@@ -1,0 +1,43 @@
+.header {
+    border-bottom: 1px solid black;
+    height: 4rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header > svg {
+    margin-left: 1rem;
+}
+
+.header > div {
+    margin-right: 1rem;
+}
+
+.headerInner {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.style.headerInner > svg {
+    width: auto;
+    height: 1rem;
+
+}
+
+.exit {
+    font-size: 1.75rem;
+    cursor: pointer;
+    transition: color 300ms ease-out;
+}
+
+@media (hover:hover) {
+    .exit:hover {
+        color: gray;
+    }
+}
+
+
