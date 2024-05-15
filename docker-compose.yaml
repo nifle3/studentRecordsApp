@@ -115,7 +115,7 @@ services:
     depends_on:
       - backend
       - frontend
-    
+
   frontend:
     container_name: frontend
     build:
@@ -123,11 +123,11 @@ services:
       dockerfile: Dockerfile
     restart: on-failure
     ports: 
-      - 3000:3000
+      - 3001:3000
     networks:
       - prod
     healthcheck:
-      test: curl --fail http://localhost:4000/ping || exit 1
+      test: curl --fail http://localhost:3000/ping || exit 1
       interval: 10s
       timeout: 3s
       retries: 3

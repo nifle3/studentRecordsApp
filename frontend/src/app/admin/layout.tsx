@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     description: "Страница админа",
 };
 
-export default function RootLayout({children}: Readonly<{ children: ReactNode;
+export default function AdminLayout({children}: Readonly<{ children: ReactNode;
 }>) {
     return (
         <html lang="ru">

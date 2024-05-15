@@ -9,7 +9,7 @@ import Button from "react-bootstrap/Button";
 import {FormEvent} from "react";
 import {useError} from "@/customHooks/useError";
 
-const fetcher = async () => fetch("http://localhost:80/api/v1/admin", {
+const fetcher = async () => fetch("https://localhost:443/api/v1/admin", {
     method: "GET",
 }).then(response => response.json())
 
@@ -30,7 +30,7 @@ export default function AdminSelfInfo() {
         event.preventDefault()
         const formData = new FormData(event.currentTarget)
 
-        const response = await fetch('http://localhost:80/api/v1/admin', {
+        const response = await fetch('https://localhost:443/api/v1/admin', {
             method: 'PATCH',
             body: formData,
         })

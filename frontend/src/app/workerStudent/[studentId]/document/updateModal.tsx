@@ -19,7 +19,7 @@ export default function UpdateModal({Data, onClose, mutate, Show}
         event.preventDefault()
         const formData = new FormData(event.currentTarget)
 
-        const response = await fetch('http://localhost:80/api/v1/worker/document/' + Data.id, {
+        const response = await fetch('https://localhost:443/api/v1/worker/document/' + Data.id, {
             method: 'PATCH',
             body: formData,
         })

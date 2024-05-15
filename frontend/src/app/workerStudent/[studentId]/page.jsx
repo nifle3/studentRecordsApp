@@ -11,7 +11,7 @@ import {useParams} from "next/navigation";
 
 export default function Home() {
     const {studentId} = useParams()
-    const fetcher = () => fetch("http://localhost:80/api/v1/worker/student/application/" + studentId, {
+    const fetcher = () => fetch("https://localhost:443/api/v1/worker/student/application/" + studentId, {
         method: "GET",
     }).then(response => response.json())
 
@@ -39,7 +39,7 @@ export default function Home() {
 
     const onOK = (id) => {
         return async () => {
-            const response = await fetch("http://localhost:80/api/v1/worker/application/close/" + id, {
+            const response = await fetch("https://localhost:443/api/v1/worker/application/close/" + id, {
                 method: "PATCH",
             }).then(response => response)
             if (!response.ok) {
@@ -76,7 +76,7 @@ export default function Home() {
                         <td>{val.contact_info}</td>
                         <td><span className={style.tableAction} onClick={onUpdate(val.id)}>Тык!</span></td>
                         <td>
-                            <DownloadFile ClassName={style.tableAction} Fetch={"http://localhost:80/api/v1/worker/application/download/" + val.link}
+                            <DownloadFile ClassName={style.tableAction} Fetch={"https://localhost:443/api/v1/worker/application/download/" + val.link}
                                           FileName={"document_"+val.name+"_" + val.fio + ".pdf"}/>
                         </td>
                     </tr>

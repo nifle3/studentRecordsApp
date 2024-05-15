@@ -11,23 +11,6 @@ import CustomAlert from "@/elements/customAlert/customAlert";
 
 export default function AuthForm() {
     const router = useRouter()
-
-    useLayoutEffect(() => {
-        const role = localStorage.getItem("role")
-
-        if (role == "Админ") {
-            router.push("/admin")
-        }
-
-        if (role == "Работник") {
-            router.push("/worker")
-        }
-
-        if (role == "Студент") {
-            router.push("/student")
-        }
-    })
-
     const [showError, setShowError] = useState<boolean>(false)
     const [errorCode, setErrorCode] = useState<number>(200)
     const [error, setError] = useState<string>("")
@@ -36,7 +19,7 @@ export default function AuthForm() {
         event.preventDefault()
 
         const formData = new FormData(event.currentTarget)
-        const response = await fetch('http://localhost:80/v1/auth', {
+        const response = await fetch('https://localhost:443/api/v1/auth', {
             method: 'POST',
             body: formData,
         })
@@ -58,25 +41,23 @@ export default function AuthForm() {
             return
         }
 
+
         if (role == "Админ") {
-            localStorage.setItem("role", "Админ")
             router.push("/admin")
         }
 
         if (role == "Работник") {
-            localStorage.setItem("role", "Работник")
             router.push("/worker")
         }
 
         if (role == "Студент") {
-            localStorage.setItem("role", "Студент")
             router.push("/student")
         }
     }
 
     return (
         <>
-            <Form className={style.login} onSubmit={onSubmit}>
+            <Form className={style.login} onSubmit={onSubmit} method={"POST"}>
                 <SelectRole Roles={["Админ", "Работник", "Студент"]} Id={"RoleSelectId"} Name={"role"}
                             ClassName={style.input}/>
                 <Input  Type={"email"} LabelHolder={"Почта:"}

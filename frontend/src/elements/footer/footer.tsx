@@ -1,7 +1,9 @@
+import style from "@/styles/layoutPage/layoutPage.module.css"
+
 export default function Footer() {
     return (
-        <footer className={"footer"}>
-            <div>
+        <footer className={style.footer}>
+            <div className={style.footerDiv}>
                 <svg width="51" height="42" viewBox="0 0 51 42" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g clipPath="url(#clip0_1_10)">
                         <path

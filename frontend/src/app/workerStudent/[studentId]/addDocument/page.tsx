@@ -24,7 +24,7 @@ export default function Home() {
         const formData = new FormData(event.currentTarget)
         formData.set("student_id", studentId)
 
-        const response = await fetch('http://localhost:80/api/v1/worker/document', {
+        const response = await fetch('https://localhost:443/api/v1/worker/document', {
             method: 'POST',
             body: formData,
         })

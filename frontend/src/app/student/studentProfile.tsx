@@ -14,7 +14,7 @@ export default function StudentProfile() {
     const {alert, setError, setShow
         , setErrorCode} = useError()
 
-    const fetcher = async () => await fetch("http://localhost:80/api/v1/student", {
+    const fetcher = async () => await fetch("https://localhost:443/api/api/v1/student", {
         method: "GET",
     }) .then(response => response.json())
     const {data, isLoading, mutate} = useSWR("/v1/student", fetcher)
@@ -30,7 +30,7 @@ export default function StudentProfile() {
         event.preventDefault()
         const formData = new FormData(event.currentTarget)
 
-        const response = await fetch('http://localhost:80/api/v1/student', {
+        const response = await fetch('https://localhost:443/api/v1/student', {
             method: 'PATCH',
             body: formData,
         })
@@ -50,7 +50,7 @@ export default function StudentProfile() {
         <Form method={"POST"} onSubmit={onSubmit} className={"mb-3"}>
             <Row>
                 <Col>
-                    <Image fetchUri={"http://localhost:80/api/v1/student/photo"}/>
+                    <Image fetchUri={"https://localhost:443/api/v1/student/photo"}/>
                 </Col>
                 <Col>
                     <Input Name={"name"} Id={"FirstNameId"}

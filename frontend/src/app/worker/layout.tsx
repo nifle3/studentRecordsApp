@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     description: "Страница работника",
 };
 
-export default function RootLayout({children}: Readonly<{ children: ReactNode; }>) {
+export default function WorkerLayout({children}: Readonly<{ children: ReactNode; }>) {
     return (
         <html lang="ru">
             <body className={inter.className}>

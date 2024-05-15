@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/rs/cors"
 	"net/http"
 	entities "studentRecordsApp/internal/service/entities"
 	"time"
@@ -61,6 +62,7 @@ func (s Server) Start() error {
 
 	mux.HandleFunc("POST /v1/auth", s.Login)
 	mux.HandleFunc("GET /v1/ping", s.GetRole)
+	mux.HandleFunc("GET /v1/userRole", s.CheckRole)
 	mux.HandleFunc("GET /v1/role", s.GetRole)
 	mux.HandleFunc("GET /v1/role/worker", s.GetWorkerRole)
 
@@ -113,10 +115,16 @@ func (s Server) Start() error {
 	mux.HandleFunc("GET /v1/student/application/download/{link}", s.SecureHandler(entities.UserStudent,
 		s.StudentDownloadApplication))
 
+	CORS := cors.New(cors.Options{
+		AllowCredentials: true,
+		AllowedOrigins:   []string{"http://localhost:80", "http://localhost", "http://172.18.0.1:80"},
+		AllowedMethods:   []string{"POST", "GET", "PATCH", "DELETE", "PUT", "OPTION", "HEAD"},
+	}).Handler(mux)
+
 	server := http.Server{
 		Addr:        fmt.Sprintf("0.0.0.0:%s", s.Port),
 		IdleTimeout: s.IdleTimeout,
-		Handler:     mux,
+		Handler:     CORS,
 	}
 
 	return server.ListenAndServe()

@@ -11,7 +11,7 @@ import UpdateFileModal from "@/app/workerStudent/[studentId]/document/updateFIle
 
 export default function Home() {
     const {studentId} = useParams()
-    const fetcher = () => fetch("http://localhost:80/api/v1/worker/student/document/" + studentId, {
+    const fetcher = () => fetch("https://localhost:443/api/v1/worker/student/document/" + studentId, {
         method: "GET",
     }).then(response => response.json())
 
@@ -19,7 +19,7 @@ export default function Home() {
     const {data, isLoading, mutate} = useSWR("/v1/document", fetcher)
     const [selectData, setSelectedData] = useState(null)
     const [showUpdate, setShowUpdate] = useState(false)
-    const [setedId, setId] = useState<string>("")
+    const [setedId, setId] = useState("")
     const [showUpdateFile, setShowUpdateFile] = useState(false)
 
     if (isLoading) {
@@ -55,7 +55,7 @@ export default function Home() {
                     <th>Создана</th>
                     <th>Обновить</th>
                     <th>Обновить файл</th>
-                    <th>Скачать</th>
+                    <th>Скачать </th>
                 </tr>
                 </thead>
                 <tbody>
@@ -68,7 +68,7 @@ export default function Home() {
                         <td><span className={style.tableAction} onClick={onUpdateFile(val.id)}>Тык!</span></td>
                         <td>
                             <DownloadFile ClassName={style.tableAction}
-                                          Fetch={"http://localhost:80/api/v1/worker/document/download/" + val.link}
+                                          Fetch={"https://localhost:443/api/v1/worker/document/download/" + val.link}
                                           FileName={"document_" + val.name + "_" + ".pdf"}/>
                         </td>
                     </tr>

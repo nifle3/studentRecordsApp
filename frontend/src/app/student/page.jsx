@@ -11,7 +11,7 @@ import {useParams} from "next/navigation";
 
 export default function Home() {
     const {studentId} = useParams()
-    const fetcher = () => fetch("http://localhost:80/api/v1/student/application", {
+    const fetcher = () => fetch("https://localhost:443/api/v1/student/application", {
         method: "GET",
     }).then(response => response.json())
 
@@ -60,7 +60,7 @@ export default function Home() {
                         <td>{val.contact_info}</td>
                         <td><span className={style.tableAction} onClick={onUpdate(val.id)}>Тык!</span></td>
                         <td>
-                            <DownloadFile ClassName={style.tableAction} Fetch={"http://localhost:80/api/v1/student/application/download/" + val.link}
+                            <DownloadFile ClassName={style.tableAction} Fetch={"https://localhost:443/api/v1/student/application/download/" + val.link}
                                           FileName={"document_"+val.name+"_" + val.fio + ".pdf"}/>
                         </td>
                     </tr>

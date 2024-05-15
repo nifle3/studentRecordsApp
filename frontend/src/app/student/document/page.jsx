@@ -7,7 +7,7 @@ import style from "@/styles/table/table.module.css";
 import DownloadFile from "@/elements/downloadFile/downloadFile";
 
 export default function Home() {
-    const fetcher = () => fetch("http://localhost:80/api/v1/student/document", {
+    const fetcher = () => fetch("https://localhost:443/api/v1/student/document", {
         method: "GET",
     }).then(response => response.json())
 
@@ -43,7 +43,7 @@ export default function Home() {
                         <td>{val.status}</td>
                         <td>
                             <DownloadFile ClassName={style.tableAction}
-                                          Fetch={"http://localhost:80/api/v1/student/document/download/" + val.link}
+                                          Fetch={"https://localhost:443/api/v1/student/document/download/" + val.link}
                                           FileName={"document_" + val.name + "_" + ".pdf"}/>
                         </td>
                     </tr>

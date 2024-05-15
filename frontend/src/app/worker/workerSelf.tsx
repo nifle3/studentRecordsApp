@@ -8,7 +8,7 @@ import Form from "react-bootstrap/Form";
 import Input from "@/elements/input/input";
 import Button from "react-bootstrap/Button";
 
-const fetcher = async () => fetch("http://localhost:80/api/v1/worker", {
+const fetcher = async () => fetch("https://localhost:443/api/v1/worker", {
     method: "GET",
 }).then(response => response.json())
 
@@ -29,7 +29,7 @@ export default function WorkerSelf() {
         event.preventDefault()
         const formData = new FormData(event.currentTarget)
 
-        const response = await fetch('http://localhost:80/api/v1/worker', {
+        const response = await fetch('https://localhost:443/api/v1/worker', {
             method: 'PATCH',
             body: formData,
         })

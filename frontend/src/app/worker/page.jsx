@@ -6,7 +6,7 @@ import useSWR from "swr";
 import style from "@/styles/table/table.module.css"
 import {useRouter} from "next/navigation";
 
-const fetcher = () => fetch("http://localhost:80/api/v1/worker/student", {
+const fetcher = () => fetch("https://localhost:443/api/v1/worker/student", {
     method: "GET",
 }).then(response => response.json())
 

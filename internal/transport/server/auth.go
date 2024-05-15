@@ -7,13 +7,11 @@ import (
 
 	"github.com/google/uuid"
 
-    "studentRecordsApp/internal/service/entities"
+	"studentRecordsApp/internal/service/entities"
 )
 
 type SecureHandler func(w http.ResponseWriter, r *http.Request, userId uuid.UUID)
 
-const isLoginValue = "1"
-const cookieLoginName = "login"
 const cookieTokenName = "token"
 
 func (s Server) GetRole(w http.ResponseWriter, r *http.Request) {
@@ -63,40 +61,28 @@ func (s Server) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	loginCookie := http.Cookie{
-		Name:     cookieLoginName,
-		Value:    isLoginValue,
-		HttpOnly: false,
-		Expires:  time.Now().Add(time.Hour * 24 * 100),
-		SameSite: http.SameSiteStrictMode,
-	}
-
 	cookie := http.Cookie{
 		Name:     cookieTokenName,
 		Value:    auth,
 		HttpOnly: true,
 		Expires:  time.Now().Add(time.Hour * 24 * 100),
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	}
 
 	http.SetCookie(w, &cookie)
-	http.SetCookie(w, &loginCookie)
+}
+
+func (s Server) CheckRole(w http.ResponseWriter, r *http.Request) {
+	_, err := r.Cookie(cookieTokenName)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 }
 
 func (s Server) SecureHandler(requireRole string, next SecureHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie(cookieLoginName)
-		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		if cookie.Value != isLoginValue {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		cookie, err = r.Cookie(cookieTokenName)
+		cookie, err := r.Cookie(cookieTokenName)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -114,18 +100,7 @@ func (s Server) SecureHandler(requireRole string, next SecureHandler) http.Handl
 
 func (s Server) SecureHandlerWithOutId(requireRole string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie(cookieLoginName)
-		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		if cookie.Value != isLoginValue {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		cookie, err = r.Cookie(cookieTokenName)
+		cookie, err := r.Cookie(cookieTokenName)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return

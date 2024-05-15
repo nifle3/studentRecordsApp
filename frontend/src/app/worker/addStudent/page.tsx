@@ -19,7 +19,7 @@ export default function Home() {
         event.preventDefault()
         const formData = new FormData(event.currentTarget)
 
-        const response = await fetch('http://localhost:80/api/v1/worker/student', {
+        const response = await fetch('https://localhost:443/api/v1/worker/student', {
             method: 'POST',
             body: formData,
         })

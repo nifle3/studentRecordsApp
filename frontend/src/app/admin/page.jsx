@@ -7,7 +7,7 @@ import tableStyle from "@/styles/table/table.module.css"
 import DeleteModal from "@/elements/deleteModal/deleteModal";
 import UpdateModal from "@/app/admin/updateModal";
 
-const fetcher = () => fetch("http://localhost:80/api/v1/admin/worker", {
+const fetcher = () => fetch("https://localhost:443/api/v1/admin/worker", {
     method: "GET",
 }).then(response => response.json())
 
@@ -41,7 +41,7 @@ export default function Home() {
     }
 
     const onOk = async () => {
-        await fetch("http://localhost:80/api/v1/admin/worker/" + selectId, {
+        await fetch("https://localhost:443/api/v1/admin/worker/" + selectId, {
             method: "DELETE",
         })
         await mutate()
