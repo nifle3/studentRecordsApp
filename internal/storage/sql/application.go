@@ -56,7 +56,8 @@ func NewApplication(db *sqlx.DB) *Application {
 
 func (a *Application) Get(ctx context.Context) ([]entities.Application, error) {
 	var sqlResults []sqlEntities.Application
-	err := a.db.SelectContext(ctx, &sqlResults, "SELECT * FROM Applications ORDER BY created_at")
+	err := a.db.SelectContext(ctx, &sqlResults, "SELECT * FROM Applications WHERE status = $1 ORDER BY created_at",
+		entities.ApplicationCreated)
 	if err != nil {
 		return nil, err
 	}

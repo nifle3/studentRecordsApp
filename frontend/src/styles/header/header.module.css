@@ -34,8 +34,22 @@
     transition: color 300ms ease-out;
 }
 
+.exit > svg {
+    margin-left: 1rem;
+    color: black;
+    transition: color 300ms ease-out;
+}
+
 @media (hover:hover) {
     .exit:hover {
+        color: gray;
+    }
+
+    .exit:hover > svg {
+        color: gray
+    }
+
+    .exit > svg:hover {
         color: gray;
     }
 }

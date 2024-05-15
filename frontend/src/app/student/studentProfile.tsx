@@ -14,7 +14,7 @@ export default function StudentProfile() {
     const {alert, setError, setShow
         , setErrorCode} = useError()
 
-    const fetcher = async () => await fetch("https://localhost:443/api/api/v1/student", {
+    const fetcher = async () => await fetch("https://localhost:443/api/v1/student", {
         method: "GET",
     }) .then(response => response.json())
     const {data, isLoading, mutate} = useSWR("/v1/student", fetcher)
